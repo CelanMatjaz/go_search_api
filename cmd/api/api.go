@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/CelanMatjaz/job_application_tracker_api/cmd/db"
+	"github.com/CelanMatjaz/job_application_tracker_api/cmd/service/auth"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -30,6 +31,12 @@ func (s *APIServer) Start() error {
 		w.Write([]byte(fmt.Sprint("Test")))
 	})
 
+	r.Route("/api/v1", func(r chi.Router) {
+		authStore := auth.NewStore(s.db)
+		authHandler := auth.NewHandler(authStore)
+		authHandler.AddRoutes(r)
+	})
+
 	server := http.Server{
 		Addr:    fmt.Sprintf("0.0.0.0:%s", s.port),
 		Handler: r,
@@ -41,4 +48,3 @@ func (s *APIServer) Start() error {
 
 	return nil
 }
-
