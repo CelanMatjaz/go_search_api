@@ -1,13 +1,9 @@
 package auth
 
 import (
-	"errors"
-
-	"github.com/CelanMatjaz/job_application_tracker_api/cmd/types"
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service"
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
 )
-
-var InvalidBodyErr = errors.New("Provided JSON body is not valid")
-var PasswordsDoNotMatchErr = errors.New("Passwords do not match")
 
 type RegisterBody struct {
 	FirstName      *string `json:"first_name"`
@@ -23,11 +19,11 @@ func (r *RegisterBody) IsValid() error {
 		r.Email == nil ||
 		r.Password == nil ||
 		r.PasswordVerify == nil {
-		return InvalidBodyErr
+		return service. InvalidBodyErr
 	}
 
 	if *r.Password != *r.PasswordVerify {
-		return PasswordsDoNotMatchErr
+		return service.PasswordsDoNotMatchErr
 	}
 
 	return nil
@@ -53,7 +49,7 @@ type LoginBody struct {
 
 func (l *LoginBody) IsValid() error {
 	if l.Email == nil || l.Password == nil {
-		return InvalidBodyErr
+		return service.InvalidBodyErr
 	}
 
 	return nil

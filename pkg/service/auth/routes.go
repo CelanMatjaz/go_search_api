@@ -6,22 +6,20 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/CelanMatjaz/job_application_tracker_api/cmd/db"
-	"github.com/CelanMatjaz/job_application_tracker_api/cmd/service"
-	"github.com/CelanMatjaz/job_application_tracker_api/cmd/types"
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service"
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
 	"golang.org/x/crypto/bcrypt"
 )
-
-var tokenAuth *jwtauth.JWTAuth
 
 type Handler struct {
 	store db.AuthStore
 }
 
 func NewHandler(store db.AuthStore) *Handler {
-	tokenAuth = jwtauth.New("HS256", []byte("secret"), nil)
+	service.TokenAuth = jwtauth.New("HS256", []byte("secret"), nil)
 
 	return &Handler{store: store}
 }
@@ -141,7 +139,7 @@ func (h *Handler) handleAuthCheck(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("authorization")
 
 	isValid := strings.HasPrefix(token, "Bearer ")
-	_, err := jwtauth.VerifyToken(tokenAuth, strings.TrimPrefix(token, "Bearer "))
+	_, err := jwtauth.VerifyToken(service.TokenAuth, strings.TrimPrefix(token, "Bearer "))
 	if !isValid || token == "" || err != nil {
 		service.SendErrorsResponse(w, []string{"Athorization header is not valid"}, http.StatusUnauthorized)
 		return
@@ -160,7 +158,7 @@ func hashPassword(password string) (string, error) {
 }
 
 func createJwtToken(user types.InternalUser) (string, error) {
-	_, token, err := tokenAuth.Encode(map[string]interface{}{
+	_, token, err := service.TokenAuth.Encode(map[string]interface{}{
 		"user_id": user.Id,
 	})
 	return token, err
