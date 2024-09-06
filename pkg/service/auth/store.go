@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/CelanMatjaz/job_application_tracker_api/cmd/db"
-	"github.com/CelanMatjaz/job_application_tracker_api/cmd/types"
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
 )
 
 var UserDoesNotExistErr = errors.New("User does not exist")

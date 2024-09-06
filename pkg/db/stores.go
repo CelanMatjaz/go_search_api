@@ -1,6 +1,8 @@
 package db
 
-import "github.com/CelanMatjaz/job_application_tracker_api/cmd/types"
+import (
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
+)
 
 type AuthStore interface {
 	GetInternalUserById(id int) (types.InternalUser, error)

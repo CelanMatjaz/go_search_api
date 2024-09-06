@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/CelanMatjaz/job_application_tracker_api/cmd/db"
-	"github.com/CelanMatjaz/job_application_tracker_api/cmd/service/auth"
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service/auth"
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service/resumes"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -35,6 +36,10 @@ func (s *APIServer) Start() error {
 		authStore := auth.NewStore(s.db)
 		authHandler := auth.NewHandler(authStore)
 		authHandler.AddRoutes(r)
+
+        resumeStore := resumes.NewStore(s.db)
+        resumeHandler := resumes.NewHandler(*resumeStore)
+        resumeHandler.AddRoutes(r)
 	})
 
 	server := http.Server{

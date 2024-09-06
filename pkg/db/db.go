@@ -3,7 +3,7 @@ package db
 import (
 	"database/sql"
 
-	"github.com/CelanMatjaz/job_application_tracker_api/cmd/assert"
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/assert"
 	_ "github.com/lib/pq"
 )
 
