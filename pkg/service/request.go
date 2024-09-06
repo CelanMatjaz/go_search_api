@@ -2,29 +2,21 @@ package service
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strconv"
 	"time"
-
-	"github.com/go-chi/jwtauth/v5"
 )
 
-var TokenAuth *jwtauth.JWTAuth
-
-var InvalidBodyErr = errors.New("Provided JSON body is not valid")
-var PasswordsDoNotMatchErr = errors.New("Passwords do not match")
+var UserIdKey = "USER_ID"
 
 type response struct {
-	Timestamp  time.Time `json:"timestamp"`
-	StatusCode int       `json:"status_code"`
+	Timestamp  time.Time         `json:"timestamp"`
+	StatusCode int               `json:"status_code"`
 }
 
 type JsonResponse struct {
 	Data any `json:"data"`
 	response
-
-	Pagination *PaginationParams `json:"pagination"`
 }
 
 type ErrorResponse struct {

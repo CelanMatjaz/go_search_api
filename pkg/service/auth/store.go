@@ -8,8 +8,6 @@ import (
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
 )
 
-var UserDoesNotExistErr = errors.New("User does not exist")
-
 type Store struct {
 	db *sql.DB
 }
@@ -88,10 +86,9 @@ func scanUserRow(row *sql.Row) (types.InternalUser, error) {
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
-    
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return types.InternalUser{}, UserDoesNotExistErr
+		return types.InternalUser{}, types.UserDoesNotExistErr
 	}
 	if err != nil {
 		return types.InternalUser{}, err
