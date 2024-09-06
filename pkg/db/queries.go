@@ -31,13 +31,14 @@ func CreateCreateQuery(table string, insertFields []string, allFields []string) 
 	)
 }
 
-func CreateUpdateQuery(table string, fields []string, allFields []string) string {
+func CreateUpdateQuery(table string, fields []string, allFields []string, whereClause string) string {
 	return fmt.Sprintf(`
         UPDATE %s
-        SET %s, updated_at = DEFAULT 
-        WHERE id = $1 RETURNING %s`,
+        SET %s, updated_at = DEFAULT,
+		%s $1 RETURNING %s`,
 		table,
 		strings.Join(getSetArgs(2, fields), ", "),
+		whereClause,
 		strings.Join(allFields, ", "),
 	)
 }

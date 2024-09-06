@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
 )
 
@@ -19,11 +18,11 @@ func (r *RegisterBody) IsValid() error {
 		r.Email == nil ||
 		r.Password == nil ||
 		r.PasswordVerify == nil {
-		return service. InvalidBodyErr
+		return types.InvalidBodyErr
 	}
 
 	if *r.Password != *r.PasswordVerify {
-		return service.PasswordsDoNotMatchErr
+		return types.PasswordsDoNotMatchErr
 	}
 
 	return nil
@@ -49,7 +48,7 @@ type LoginBody struct {
 
 func (l *LoginBody) IsValid() error {
 	if l.Email == nil || l.Password == nil {
-		return service.InvalidBodyErr
+		return types.InvalidBodyErr
 	}
 
 	return nil

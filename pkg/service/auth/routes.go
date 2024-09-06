@@ -4,13 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/jwtauth/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -19,8 +17,6 @@ type Handler struct {
 }
 
 func NewHandler(store db.AuthStore) *Handler {
-	service.TokenAuth = jwtauth.New("HS256", []byte("secret"), nil)
-
 	return &Handler{store: store}
 }
 
@@ -45,7 +41,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	currentErrors := make([]string, 0)
 
 	existingUser, err := h.store.GetInternalUserByEmail(*body.Email)
-	if err != nil && !errors.Is(err, UserDoesNotExistErr) {
+	if err != nil && !errors.Is(err, types.UserDoesNotExistErr) {
 		service.SendInternalServerError(w)
 		return
 	}
@@ -71,7 +67,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := createJwtToken(existingUser)
+	token, err := service.JwtClient.CreateToken(user.Id)
 	if err != nil {
 		service.SendInternalServerError(w)
 		return
@@ -101,7 +97,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	existingUser, err := h.store.GetInternalUserByEmail(*body.Email)
-	if errors.Is(err, UserDoesNotExistErr) {
+	if errors.Is(err, types.UserDoesNotExistErr) {
 		service.SendErrorsResponse(w, []string{err.Error()}, http.StatusMethodNotAllowed)
 		return
 	} else if err != nil {
@@ -118,7 +114,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := createJwtToken(existingUser)
+	token, err := service.JwtClient.CreateToken(existingUser.Id)
 	if err != nil {
 		service.SendInternalServerError(w)
 		return
@@ -136,11 +132,8 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) handleAuthCheck(w http.ResponseWriter, r *http.Request) {
-	token := r.Header.Get("authorization")
-
-	isValid := strings.HasPrefix(token, "Bearer ")
-	_, err := jwtauth.VerifyToken(service.TokenAuth, strings.TrimPrefix(token, "Bearer "))
-	if !isValid || token == "" || err != nil {
+	_, err := service.JwtClient.VerifyToken(r)
+	if err != nil {
 		service.SendErrorsResponse(w, []string{"Athorization header is not valid"}, http.StatusUnauthorized)
 		return
 	}
@@ -155,11 +148,4 @@ func hashPassword(password string) (string, error) {
 	}
 
 	return string(hash), nil
-}
-
-func createJwtToken(user types.InternalUser) (string, error) {
-	_, token, err := service.TokenAuth.Encode(map[string]interface{}{
-		"user_id": user.Id,
-	})
-	return token, err
 }
