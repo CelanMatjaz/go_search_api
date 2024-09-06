@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
-	"github.com/CelanMatjaz/job_application_tracker_api/pkg/middleware"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
 	"github.com/go-chi/chi/v5"
@@ -24,7 +23,6 @@ func NewHandler(store db.GenericStore[types.Resume]) *Handler {
 
 func (h *Handler) AddRoutes(r chi.Router) {
 	r.Route("/resumes", func(r chi.Router) {
-		r.Use(middleware.JwtAuthenticator(service.TokenAuth))
 		r.Get("/", h.handleResumes)
 		r.Get("/{resumeId}", h.handleSingleResume)
 		r.Post("/", h.handlePostResume)
@@ -36,9 +34,13 @@ func (h *Handler) AddRoutes(r chi.Router) {
 func (h *Handler) handleResumes(w http.ResponseWriter, r *http.Request) {
 	pagination := service.GetPaginationParams(r)
 
-	// TODO: Get user id
-	var user_id int = 1
-	resumes, err := h.store.GetRecords(user_id, pagination.GetOffset(), pagination.Count)
+	userId := r.Context().Value(service.UserIdKey)
+	if userId == 0 {
+		service.SendErrorsResponse(w, []string{"Unauthorized"}, http.StatusUnauthorized)
+		return
+	}
+
+	resumes, err := h.store.GetRecords(userId, pagination.GetOffset(), pagination.Count)
 	if err != nil {
 		service.SendInternalServerError(w)
 		return
@@ -54,7 +56,13 @@ func (h *Handler) handleSingleResume(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resume, err := h.store.GetRecord(resumeId, 1)
+	userId := r.Context().Value(service.UserIdKey).(int)
+	if userId == 0 {
+		service.SendErrorsResponse(w, []string{"Unauthorized"}, http.StatusUnauthorized)
+		return
+	}
+
+	resume, err := h.store.GetRecord(resumeId, userId)
 	if errors.Is(err, sql.ErrNoRows) {
 		service.SendErrorsResponse(w, []string{"Resume does not exist"}, http.StatusNotFound)
 		return
@@ -77,7 +85,13 @@ func (h *Handler) handlePostResume(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newResume, err := h.store.CreateRecord(1, *body.Name, *body.Note)
+	userId := r.Context().Value(service.UserIdKey).(int)
+	if userId == 0 {
+		service.SendErrorsResponse(w, []string{"Unauthorized"}, http.StatusUnauthorized)
+		return
+	}
+
+	newResume, err := h.store.CreateRecord(userId, *body.Name, *body.Note)
 	if err != nil {
 		service.SendErrorsResponse(w, []string{err.Error()}, http.StatusBadRequest)
 		return
@@ -102,9 +116,15 @@ func (h *Handler) handlePutResume(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newResume, err := h.store.UpdateRecord(resumeId, *body.Name, *body.Note)
+	userId := r.Context().Value(service.UserIdKey).(int)
+	if userId == 0 {
+		service.SendErrorsResponse(w, []string{"Unauthorized"}, http.StatusUnauthorized)
+		return
+	}
+
+	newResume, err := h.store.UpdateRecord(resumeId, userId, *body.Name, *body.Note)
 	if errors.Is(err, sql.ErrNoRows) {
-		w.WriteHeader(http.StatusNotFound)
+		service.SendErrorsResponse(w, []string{"Resume with provided id was not found"}, http.StatusNotFound)
 		return
 	}
 	if err != nil {

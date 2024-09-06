@@ -49,6 +49,10 @@ func (s *APIServer) Start() error {
 
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.JwtAuthenticator())
+
+			resumeStore := resumes.NewStore(s.db)
+			resumeHandler := resumes.NewHandler(*resumeStore)
+			resumeHandler.AddRoutes(r)
 		})
 	})
 

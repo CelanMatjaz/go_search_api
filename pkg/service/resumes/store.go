@@ -7,17 +7,18 @@ import (
 
 func NewStore(connection *db.DbConnection) *db.GenericStore[types.Resume] {
 	tableName := "resumes"
-	fields := []string{"id", "user_id", "name", "note", "created_at", "updated_at"}
+	scanFields := []string{"id", "user_id", "name", "note", "created_at", "updated_at"}
 	neededFields := []string{"user_id", "name", "note"}
-	updateFields := []string{ "name", "note"}
+	updateFields := []string{"name", "note"}
+	whereClause := "WHERE id = $1 AND user_id = $2"
 
 	return &db.GenericStore[types.Resume]{
 		Db:              connection.DB,
 		Scanner:         &resumeScanner{},
-		SelectManyQuery: db.CreateSelectManyQuery(tableName, fields),
-		SelectQuery:     db.CreateSelectQuery(tableName, fields, "WHERE id = $1 AND user_id = $2"),
-		CreateQuery:     db.CreateCreateQuery(tableName, neededFields, fields),
-		UpdateQuery:     db.CreateUpdateQuery(tableName, updateFields, fields),
+		SelectManyQuery: db.CreateSelectManyQuery(tableName, scanFields),
+		SelectQuery:     db.CreateSelectQuery(tableName, scanFields, whereClause),
+		CreateQuery:     db.CreateCreateQuery(tableName, neededFields, scanFields),
+		UpdateQuery:     db.CreateUpdateQuery(tableName, updateFields, scanFields, whereClause),
 		DeleteQuery:     db.CreateDeleteQuery(tableName),
 	}
 }
