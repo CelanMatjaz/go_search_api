@@ -33,20 +33,20 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	var body RegisterBody
 	decoder.Decode(&body)
 
-	if err := body.IsValid(); err != nil {
-		service.SendErrorsResponse(w, []string{err.Error()}, http.StatusBadRequest)
+	if errors := body.IsValid(); len(errors) > 0 {
+		service.SendErrorsResponse(w, errors, http.StatusBadRequest)
 		return
 	}
 
 	currentErrors := make([]string, 0)
 
-	existingUser, err := h.store.GetInternalUserByEmail(*body.Email)
+	existingUser, err := h.store.GetInternalUserByEmail(body.Email)
 	if err != nil && !errors.Is(err, types.UserDoesNotExistErr) {
 		service.SendInternalServerError(w)
 		return
 	}
 
-	if existingUser.Email == *body.Email {
+	if existingUser.Email == body.Email {
 		currentErrors = append(currentErrors, "User with provided email already exists")
 	}
 
@@ -55,7 +55,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hash, err := hashPassword(*body.Password)
+	hash, err := hashPassword(body.Password)
 	if err != nil {
 		service.SendInternalServerError(w)
 		return
