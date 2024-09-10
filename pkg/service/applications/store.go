@@ -73,6 +73,7 @@ func (s *Store) UpdateUserApplication(userId int, applicationData types.Applicat
 		applicationData.Label, applicationData.Text, userId, applicationData.Id,
 	)
 	a, err := scanApplicationRow(row)
+
 	switch err {
 	case nil:
 		return a, nil
@@ -83,14 +84,16 @@ func (s *Store) UpdateUserApplication(userId int, applicationData types.Applicat
 	}
 }
 
-func (s *Store) DeleteUserApplication(userId int, applicationId int) error {
-	_, err := s.db.Exec("DELETE FROM job_applications WHERE user_id = $1 AND id = $2", userId, applicationId)
-	return err
+func (s *Store) DeleteUserApplication(userId int, applicationId int) (int, error) {
+	row := s.db.QueryRow("WITH d AS (DELETE FROM job_applications WHERE user_id = $1 AND id = $2 RETURNING *) SELECT COUNT(*) FROM d", userId, applicationId)
+	deletedCount := 0
+	err := row.Scan(&deletedCount)
+	return deletedCount, err
 }
 
 func (s *Store) GetApplicationSections(userId int, pagination service.PaginationParams) ([]types.ApplicationSection, error) {
 	rows, err := s.db.Query(
-		"SELECT FROM * FROM job_application_sections WHERE user_id = $1",
+		"SELECT * FROM job_application_sections WHERE user_id = $1 OFFSET $2 LIMIT $3",
 		userId, pagination.GetOffset(), pagination.Count)
 	if err != nil {
 		return []types.ApplicationSection{}, err
@@ -108,7 +111,7 @@ func (s *Store) GetApplicationSections(userId int, pagination service.Pagination
 	return sections, nil
 }
 
-func (s *Store) CreateApplicationSections(userId int, sectionData types.ApplicationSection) (types.ApplicationSection, error) {
+func (s *Store) CreateApplicationSection(userId int, sectionData types.ApplicationSection) (types.ApplicationSection, error) {
 	row := s.db.QueryRow(
 		"INSERT INTO job_application_sections (user_id, label, text) VALUES ($1, $2, $3) RETURNING *",
 		userId, sectionData.Label, sectionData.Text,
@@ -124,7 +127,7 @@ func (s *Store) CreateApplicationSections(userId int, sectionData types.Applicat
 	}
 }
 
-func (s *Store) UpdateApplicationSections(userId int, sectionData types.ApplicationSection) (types.ApplicationSection, error) {
+func (s *Store) UpdateApplicationSection(userId int, sectionData types.ApplicationSection) (types.ApplicationSection, error) {
 	row := s.db.QueryRow(
 		"UPDATE job_application_sections SET label = $1, text = $2, updated_at = DEFAULT WHERE user_id = $3 AND id = $4 RETURNING *",
 		sectionData.Label, sectionData.Text, userId, sectionData.Id,
@@ -140,9 +143,11 @@ func (s *Store) UpdateApplicationSections(userId int, sectionData types.Applicat
 	}
 }
 
-func (s *Store) DeleteApplicationSections(userId int, sectionId int) error {
-	_, err := s.db.Exec("DELETE FROM job_applications WHERE user_id = $1 AND id = $2", userId, sectionId)
-	return err
+func (s *Store) DeleteApplicationSection(userId int, sectionId int) (int, error) {
+	row := s.db.QueryRow("WITH d AS (DELETE FROM job_application_sections WHERE user_id = $1 AND id = $2 RETURNING *) SELECT COUNT(*) FROM d", userId, sectionId)
+	deletedCount := 0
+	err := row.Scan(&deletedCount)
+	return deletedCount, err
 }
 
 func scanApplicationRow(row db.Scannable) (types.Application, error) {

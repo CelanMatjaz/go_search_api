@@ -41,7 +41,12 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	currentErrors := make([]string, 0)
 
 	existingUser, err := h.store.GetUserByEmail(body.Email)
-	if err != nil && !errors.Is(err, types.UserDoesNotExistErr) {
+
+	switch err {
+	case types.UserDoesNotExistErr:
+	case nil:
+		break
+	default:
 		service.SendInternalServerError(w)
 		return
 	}
@@ -98,7 +103,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	existingUser, err := h.store.GetUserByEmail(*body.Email)
 	if errors.Is(err, types.UserDoesNotExistErr) {
-		service.SendErrorsResponse(w, []string{err.Error()}, http.StatusMethodNotAllowed)
+		service.SendErrorsResponse(w, []string{"User with provided email does not exist"}, http.StatusUnauthorized)
 		return
 	} else if err != nil {
 		service.SendInternalServerError(w)
@@ -121,10 +126,12 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type loginResponseData struct {
-		Token string `json:"auth_token"`
+		User  types.User `json:"user"`
+		Token string     `json:"auth_token"`
 	}
 
 	data := loginResponseData{
+		User:  existingUser,
 		Token: token,
 	}
 

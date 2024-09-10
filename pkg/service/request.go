@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var UserIdKey = "USER_ID"
+var UserIdKey = "usr_id"
 
 type response struct {
 	Timestamp  time.Time `json:"timestamp"`
@@ -15,7 +15,7 @@ type response struct {
 }
 
 type JsonResponse struct {
-	Data any `json:"data"`
+	Data any `json:"data,omitempty"`
 	response
 }
 
@@ -53,9 +53,10 @@ func SendInternalServerError(w http.ResponseWriter) {
 }
 
 func sendJson(w http.ResponseWriter, val any, statusCode int) {
+    data, _ := json.Marshal(val)
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	w.Header().Add("Content-type", "application/json")
-	json.NewEncoder(w).Encode(val)
+    w.Write(data)
 }
 
 type PaginationParams struct {

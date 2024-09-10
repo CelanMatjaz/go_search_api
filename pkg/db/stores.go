@@ -15,7 +15,7 @@ type TagStore interface {
 	GetUserTag(userId int, tagData int) (types.Tag, error)
 	CreateUserTag(userId int, tagData types.Tag) (types.Tag, error)
 	UpdateUserTag(userId int, tagData types.Tag) (types.Tag, error)
-	DeleteUserTag(userId int, tagId int) error
+	DeleteUserTag(userId int, tagId int) (int,error)
 
 	GetApplicationTags(userId int, applicationId int) (types.Tag, error)
 	GetApplicationSectionTags(userId int, sectionId int) (types.Tag, error)
@@ -28,12 +28,12 @@ type ApplicationStore interface {
 	GetUserApplication(userId int, applicationId int) (types.Application, error)
 	CreateUserApplication(userId int, applicationData types.Application) (types.Application, error)
 	UpdateUserApplication(userId int, applicationData types.Application) (types.Application, error)
-	DeleteUserApplication(userId int, applicationId int) error
+	DeleteUserApplication(userId int, applicationId int) (int,error)
 
 	GetApplicationSections(userId int, pagination service.PaginationParams) ([]types.ApplicationSection, error)
-	CreateApplicationSections(userId int, applicationData types.ApplicationSection) (types.ApplicationSection, error)
-	UpdateApplicationSections(userId int, applicationData types.ApplicationSection) (types.ApplicationSection, error)
-	DeleteApplicationSections(userId int, sectionId int) error
+	CreateApplicationSection(userId int, applicationData types.ApplicationSection) (types.ApplicationSection, error)
+	UpdateApplicationSection(userId int, applicationData types.ApplicationSection) (types.ApplicationSection, error)
+	DeleteApplicationSection(userId int, sectionId int) (int,error)
 }
 
 type ResumeStore interface {
@@ -41,10 +41,10 @@ type ResumeStore interface {
 	GetUserResume(userId int, applicationId int) (types.Resume, error)
 	CreateUserResume(userId int, applicationData types.Resume) (types.Resume, error)
 	UpdateUserResume(userId int, applicationData types.Resume) (types.Resume, error)
-	DeleteUserResume(userId int, applicationId int) error
+	DeleteUserResume(userId int, applicationId int) (int,error)
 
 	GetResumeSections(userId int, pagination service.PaginationParams) ([]types.ResumeSection, error)
 	CreateResumesSections(userId int, applicationData types.Resume) (types.Resume, error)
 	UpdateResumesSections(userId int, applicationData types.Resume) (types.Resume, error)
-	DeleteResumesSections(userId int, sectionId int) error
+	DeleteResumesSections(userId int, sectionId int) (int,error)
 }

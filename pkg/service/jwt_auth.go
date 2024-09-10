@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
 	"github.com/golang-jwt/jwt/v4"
@@ -14,6 +15,7 @@ var JwtClient JwtAuth
 
 type JwtAuth struct {
 	secret []byte
+	issuer []byte
 }
 
 func (a *JwtAuth) InitJwtAuth() error {
@@ -23,11 +25,21 @@ func (a *JwtAuth) InitJwtAuth() error {
 	}
 	a.secret = []byte(secret)
 
+	issuer := os.Getenv("JWT_ISSUER")
+	if issuer == "" {
+		log.Fatal("JWT_ISSUER not provided as an env variable")
+	}
+	a.issuer = []byte(secret)
+
 	return nil
 }
 
 func (a *JwtAuth) CreateToken(userId int) (string, error) {
+	currentTime := time.Now()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"iss":     a.issuer,
+		"iat":     currentTime.Unix(),
+		"exp":     currentTime.Add(+time.Hour * 24 * 30).Unix(),
 		UserIdKey: userId,
 	})
 

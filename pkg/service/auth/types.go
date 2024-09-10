@@ -20,7 +20,7 @@ func (r *RegisterBody) IsValid() []string {
 		r.Email == "" ||
 		r.Password == "" ||
 		r.PasswordVerify == "" {
-		errors = append(errors, "Provided JSON body is not valid")
+		errors = append(errors, "At least 1 required field is missing")
 	}
 
 	specialCharacterOrNumber := false
