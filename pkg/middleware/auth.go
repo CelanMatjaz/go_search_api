@@ -11,7 +11,7 @@ func JwtAuthenticator() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		hfn := func(w http.ResponseWriter, r *http.Request) {
 			userId, err := service.JwtClient.VerifyToken(r)
-			if err != nil {
+			if err != nil || userId < 0 {
 				service.SendErrorsResponse(w, []string{"Athorization header is not valid"}, http.StatusUnauthorized)
 				return
 			}

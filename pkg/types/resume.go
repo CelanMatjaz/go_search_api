@@ -8,8 +8,11 @@ type Resume struct {
 	Timestamps
 }
 
-type ResumeTag struct {
+type ResumeSection struct {
 	Common
-	ResumeId int    `json:"resume_id" db:"resume_id"`
-	Label    string `json:"label" db:"label"`
+	UserId   int    `json:"user_id" db:"user_id"`
+	Label    string `json:"name" db:"label"`
+	Markdown string `json:"markdown" db:"markdown"`
+	Timestamps
 }
+

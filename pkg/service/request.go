@@ -10,8 +10,8 @@ import (
 var UserIdKey = "USER_ID"
 
 type response struct {
-	Timestamp  time.Time         `json:"timestamp"`
-	StatusCode int               `json:"status_code"`
+	Timestamp  time.Time `json:"timestamp"`
+	StatusCode int       `json:"status_code"`
 }
 
 type JsonResponse struct {

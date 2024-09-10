@@ -9,6 +9,7 @@ import (
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/middleware"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service"
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service/applications"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service/auth"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service/resumes"
 	"github.com/go-chi/chi/v5"
@@ -69,6 +70,10 @@ func (s *APIServer) Start() error {
 			resumeStore := resumes.NewStore(s.db)
 			resumeHandler := resumes.NewHandler(*resumeStore)
 			resumeHandler.AddRoutes(r)
+
+			applicationStore := applications.NewStore(s.db)
+			applicationHandler := applications.NewHandler(applicationStore)
+			applicationHandler.AddRoutes(r)
 		})
 	})
 

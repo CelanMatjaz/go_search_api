@@ -16,18 +16,18 @@ func NewStore(connection *db.DbConnection) *Store {
 	return &Store{db: connection.DB}
 }
 
-func (s *Store) GetInternalUserById(id int) (types.InternalUser, error) {
-	return s.getInternalUser("WHERE users.id = $1", id)
+func (s *Store) GetUserById(id int) (types.User, error) {
+	return s.getUser("WHERE users.id = $1", id)
 }
 
-func (s *Store) GetInternalUserByEmail(email string) (types.InternalUser, error) {
-	return s.getInternalUser("WHERE users.email = $1", email)
+func (s *Store) GetUserByEmail(email string) (types.User, error) {
+	return s.getUser("WHERE users.email = $1", email)
 }
 
-func (s *Store) CreateUser(user types.InternalUser) (types.InternalUser, error) {
+func (s *Store) CreateUser(user types.User) (types.User, error) {
 	transaction, err := s.db.Begin()
 	if err != nil {
-		return types.InternalUser{}, err
+		return types.User{}, err
 	}
 	defer transaction.Rollback()
 
@@ -43,18 +43,18 @@ func (s *Store) CreateUser(user types.InternalUser) (types.InternalUser, error) 
 
 	newUser, err := scanUserRow(row)
 	if err != nil {
-		return types.InternalUser{}, err
+		return types.User{}, err
 	}
 
 	err = transaction.Commit()
 	if err != nil {
-		return types.InternalUser{}, err
+		return types.User{}, err
 	}
 
 	return newUser, nil
 }
 
-func (s *Store) getInternalUser(whereClause string, value any) (types.InternalUser, error) {
+func (s *Store) getUser(whereClause string, value any) (types.User, error) {
 	row := s.db.QueryRow(`
         SELECT
             id,
@@ -69,14 +69,14 @@ func (s *Store) getInternalUser(whereClause string, value any) (types.InternalUs
 
 	user, err := scanUserRow(row)
 	if err != nil {
-		return types.InternalUser{}, err
+		return types.User{}, err
 	}
 
 	return user, nil
 }
 
-func scanUserRow(row *sql.Row) (types.InternalUser, error) {
-	var user types.InternalUser
+func scanUserRow(row *sql.Row) (types.User, error) {
+	var user types.User
 	err := row.Scan(
 		&user.Id,
 		&user.FirstName,
@@ -88,10 +88,10 @@ func scanUserRow(row *sql.Row) (types.InternalUser, error) {
 	)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return types.InternalUser{}, types.UserDoesNotExistErr
+		return types.User{}, types.UserDoesNotExistErr
 	}
 	if err != nil {
-		return types.InternalUser{}, err
+		return types.User{}, err
 	}
 
 	return user, nil

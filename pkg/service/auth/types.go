@@ -53,15 +53,11 @@ func (r *RegisterBody) IsValid() []string {
 	return errors
 }
 
-func (r *RegisterBody) CreateInternalUser(passwordHash string) types.InternalUser {
-	return types.InternalUser{
-		User: types.User{
-			CommonUser: types.CommonUser{
-				FirstName: r.FirstName,
-				LastName:  r.LastName,
-				Email:     r.Email,
-			},
-		},
+func (r *RegisterBody) CreateUser(passwordHash string) types.User {
+	return types.User{
+		FirstName:    r.FirstName,
+		LastName:     r.LastName,
+		Email:        r.Email,
 		PasswordHash: passwordHash,
 	}
 }

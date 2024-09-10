@@ -40,7 +40,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 	currentErrors := make([]string, 0)
 
-	existingUser, err := h.store.GetInternalUserByEmail(body.Email)
+	existingUser, err := h.store.GetUserByEmail(body.Email)
 	if err != nil && !errors.Is(err, types.UserDoesNotExistErr) {
 		service.SendInternalServerError(w)
 		return
@@ -61,7 +61,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.store.CreateUser(body.CreateInternalUser(hash))
+	user, err := h.store.CreateUser(body.CreateUser(hash))
 	if err != nil {
 		service.SendInternalServerError(w)
 		return
@@ -79,7 +79,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := newUserResponseData{
-		User:  user.User,
+		User:  user,
 		Token: token,
 	}
 
@@ -96,7 +96,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	existingUser, err := h.store.GetInternalUserByEmail(*body.Email)
+	existingUser, err := h.store.GetUserByEmail(*body.Email)
 	if errors.Is(err, types.UserDoesNotExistErr) {
 		service.SendErrorsResponse(w, []string{err.Error()}, http.StatusMethodNotAllowed)
 		return
