@@ -21,11 +21,15 @@ func NewHandler(store db.AuthStore) *Handler {
 	return &Handler{store: store}
 }
 
-func (h *Handler) AddRoutes(r chi.Router) {
+func (h *Handler) AddRoutes(r chi.Router, auth func(http.Handler) http.Handler) {
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/register", h.handleRegister)
 		r.Post("/login", h.handleLogin)
-		r.Post("/check", h.handleAuthCheck)
+
+		r.Group(func(r chi.Router) {
+			r.Use(auth)
+			r.Post("/check", h.handleAuthCheck)
+		})
 	})
 }
 
@@ -130,19 +134,10 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) handleAuthCheck(w http.ResponseWriter, r *http.Request) {
-	accessTokenCookie, err := r.Cookie(utils.AccessTokenName)
-	if err != nil {
-		service.SendErrorsResponse(w, userNotAuthenticated, http.StatusUnauthorized)
-		return
-	}
-
-	userId, err := utils.JwtClient.VerifyAccessToken(accessTokenCookie.Value)
-	if err != nil {
-		service.SendErrorsResponse(w, userNotAuthenticated, http.StatusUnauthorized)
-		return
-	}
-
+	userId := r.Context().Value(utils.UserIdKey).(int)
+	println(userId)
 	user, err := h.store.GetUserById(userId)
+
 	if err != nil {
 		service.SendErrorsResponse(w, userNotAuthenticated, http.StatusUnauthorized)
 		return

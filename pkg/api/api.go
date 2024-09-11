@@ -59,14 +59,15 @@ func (s *APIServer) Start() error {
 
 	r.Route("/api/v1", func(r chi.Router) {
 		authStore := auth.NewStore(s.db)
+		authenticator := middleware.Authenticator(authStore)
 
 		r.Group(func(r chi.Router) {
 			authHandler := auth.NewHandler(authStore)
-			authHandler.AddRoutes(r)
+			authHandler.AddRoutes(r, authenticator)
 		})
 
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.Authenticator(authStore))
+			r.Use(authenticator)
 
 			resumeStore := resumes.NewStore(s.db)
 			resumeHandler := resumes.NewHandler(*resumeStore)
