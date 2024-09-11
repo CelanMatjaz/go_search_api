@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"errors"
 	"net/http"
 
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service"
@@ -21,62 +20,24 @@ func Authenticator(s *auth.Store) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		hfn := func(w http.ResponseWriter, r *http.Request) {
 			userId, err := verifyAccessToken(r)
-
-			if err != nil {
-				switch err {
-				case types.InvalidTokenErr:
-				case types.UnauthenticatedErr:
-					break
-				case types.MissingCookieErr:
-					service.SendErrorsResponse(w, missingCookie, http.StatusUnauthorized)
-					return
-				default:
-					service.SendInternalServerError(w)
-					return
-				}
-			}
-
-			if errors.Is(err, types.MissingCookieErr) {
-				return
-			}
-
-			if userId > 0 {
+			if err == nil {
 				ctx := r.Context()
 				ctx = context.WithValue(ctx, utils.UserIdKey, userId)
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
+			if handled := handleAccessTokenVerificationError(w, r, err); handled {
+				return
+			}
 
 			userId, version, err := verifyRefreshToken(r, s)
-			if err != nil {
-				switch err {
-				case types.InvalidTokenErr:
-					break
-				case types.MissingCookieErr:
-					service.SendErrorsResponse(w, invalidToken, http.StatusUnauthorized)
-					return
-				case types.UnauthenticatedErr:
-					service.SendErrorsResponse(w, unauthenticated, http.StatusUnauthorized)
-					return
-				default:
-					service.SendInternalServerError(w)
-					return
-				}
-			}
-
-			newAccessToken, err := utils.JwtClient.CreateAccessToken(userId)
-			if err != nil {
-				service.SendInternalServerError(w)
+			if handled := handleRefreshTokenVerificationError(w, r, err); handled {
 				return
 			}
-			utils.CreateAndSetCookie(w, utils.AccessTokenName, newAccessToken)
 
-			newRefreshToken, _ := utils.JwtClient.CreateRefreshToken(userId, version)
-			if err != nil {
-				service.SendInternalServerError(w)
+			if handled := setCookies(w, userId, version); handled {
 				return
 			}
-			utils.CreateAndSetCookie(w, utils.RefreshTokenName, newRefreshToken)
 
 			ctx := r.Context()
 			ctx = context.WithValue(ctx, utils.UserIdKey, userId)
@@ -84,6 +45,60 @@ func Authenticator(s *auth.Store) func(http.Handler) http.Handler {
 		}
 		return http.HandlerFunc(hfn)
 	}
+}
+
+func handleAccessTokenVerificationError(w http.ResponseWriter, r *http.Request, err error) bool {
+	switch err {
+	case nil:
+	case types.InvalidTokenErr:
+	case types.UnauthenticatedErr:
+		return false
+	case types.MissingCookieErr:
+		service.SendErrorsResponse(w, missingCookie, http.StatusUnauthorized)
+		return true
+	default:
+		service.SendInternalServerError(w)
+		return true
+	}
+
+	return false
+}
+
+func handleRefreshTokenVerificationError(w http.ResponseWriter, r *http.Request, err error) bool {
+	switch err {
+	case nil:
+	case types.InvalidTokenErr:
+		return false
+	case types.MissingCookieErr:
+		service.SendErrorsResponse(w, invalidToken, http.StatusUnauthorized)
+		return true
+	case types.UnauthenticatedErr:
+		service.SendErrorsResponse(w, unauthenticated, http.StatusUnauthorized)
+		return true
+	default:
+		service.SendInternalServerError(w)
+		return true
+	}
+
+	return false
+}
+
+func setCookies(w http.ResponseWriter, userId int, version int) bool {
+	newAccessToken, err := utils.JwtClient.CreateAccessToken(userId)
+	if err != nil {
+		service.SendInternalServerError(w)
+		return true
+	}
+	utils.CreateAndSetCookie(w, utils.AccessTokenName, newAccessToken)
+
+	newRefreshToken, _ := utils.JwtClient.CreateRefreshToken(userId, version)
+	if err != nil {
+		service.SendInternalServerError(w)
+		return true
+	}
+	utils.CreateAndSetCookie(w, utils.RefreshTokenName, newRefreshToken)
+
+	return false
 }
 
 func verifyAccessToken(r *http.Request) (int, error) {
