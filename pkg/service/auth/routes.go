@@ -8,6 +8,7 @@ import (
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/utils"
 	"github.com/go-chi/chi/v5"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -28,6 +29,13 @@ func (h *Handler) AddRoutes(r chi.Router) {
 	})
 }
 
+var (
+	userWithEmailAlreadyExists = []string{"User with provided email already exists"}
+	userWithEmailDoesNotExist  = []string{"User with provided email does not exist"}
+	passwordsDoNotMatch        = []string{"Passwords do not match"}
+	userNotAuthenticated       = []string{"User not authenticated"}
+)
+
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	var body RegisterBody
@@ -37,8 +45,6 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		service.SendErrorsResponse(w, errors, http.StatusBadRequest)
 		return
 	}
-
-	currentErrors := make([]string, 0)
 
 	existingUser, err := h.store.GetUserByEmail(body.Email)
 
@@ -52,12 +58,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if existingUser.Email == body.Email {
-		currentErrors = append(currentErrors, "User with provided email already exists")
-	}
-
-	if len(currentErrors) > 0 {
-		service.SendErrorsResponse(w, currentErrors, http.StatusBadRequest)
-		return
+		service.SendErrorsResponse(w, userWithEmailAlreadyExists, http.StatusBadRequest)
 	}
 
 	hash, err := hashPassword(body.Password)
@@ -66,29 +67,13 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.store.CreateUser(body.CreateUser(hash))
+	_, err = h.store.CreateUser(body.CreateUser(hash))
 	if err != nil {
 		service.SendInternalServerError(w)
 		return
 	}
 
-	token, err := service.JwtClient.CreateToken(user.Id)
-	if err != nil {
-		service.SendInternalServerError(w)
-		return
-	}
-
-	type newUserResponseData struct {
-		User  types.User `json:"user"`
-		Token string     `json:"auth_token"`
-	}
-
-	data := newUserResponseData{
-		User:  user,
-		Token: token,
-	}
-
-	service.SendJsonResponse(w, data, http.StatusOK)
+	service.SendJsonResponse(w, nil, http.StatusOK)
 }
 
 func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -103,7 +88,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	existingUser, err := h.store.GetUserByEmail(*body.Email)
 	if errors.Is(err, types.UserDoesNotExistErr) {
-		service.SendErrorsResponse(w, []string{"User with provided email does not exist"}, http.StatusUnauthorized)
+		service.SendErrorsResponse(w, userWithEmailDoesNotExist, http.StatusUnauthorized)
 		return
 	} else if err != nil {
 		service.SendInternalServerError(w)
@@ -112,40 +97,60 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	err = bcrypt.CompareHashAndPassword([]byte(existingUser.PasswordHash), []byte(*body.Password))
 	if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-		service.SendErrorsResponse(w, []string{"Passwords do not match"}, http.StatusBadRequest)
+		service.SendErrorsResponse(w, passwordsDoNotMatch, http.StatusBadRequest)
 		return
 	} else if err != nil {
 		service.SendInternalServerError(w)
 		return
 	}
 
-	token, err := service.JwtClient.CreateToken(existingUser.Id)
+	token, err := utils.JwtClient.CreateAccessToken(
+		existingUser.Id,
+	)
 	if err != nil {
 		service.SendInternalServerError(w)
 		return
 	}
 
-	type loginResponseData struct {
-		User  types.User `json:"user"`
-		Token string     `json:"auth_token"`
-	}
-
-	data := loginResponseData{
-		User:  existingUser,
-		Token: token,
-	}
-
-	service.SendJsonResponse(w, data, http.StatusOK)
-}
-
-func (h *Handler) handleAuthCheck(w http.ResponseWriter, r *http.Request) {
-	_, err := service.JwtClient.VerifyToken(r)
+	refreshToken, err := utils.JwtClient.CreateRefreshToken(
+		existingUser.Id,
+		existingUser.TokenVersion,
+	)
 	if err != nil {
-		service.SendErrorsResponse(w, []string{"Athorization header is not valid"}, http.StatusUnauthorized)
+		service.SendInternalServerError(w)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	utils.CreateAndSetCookie(w, utils.AccessTokenName, token)
+	utils.CreateAndSetCookie(w, utils.RefreshTokenName, refreshToken)
+
+	service.SendJsonResponse(w, struct {
+		User types.User `json:"user"`
+	}{User: existingUser}, http.StatusOK)
+}
+
+func (h *Handler) handleAuthCheck(w http.ResponseWriter, r *http.Request) {
+	accessTokenCookie, err := r.Cookie(utils.AccessTokenName)
+	if err != nil {
+		service.SendErrorsResponse(w, userNotAuthenticated, http.StatusUnauthorized)
+		return
+	}
+
+	userId, err := utils.JwtClient.VerifyAccessToken(accessTokenCookie.Value)
+	if err != nil {
+		service.SendErrorsResponse(w, userNotAuthenticated, http.StatusUnauthorized)
+		return
+	}
+
+	user, err := h.store.GetUserById(userId)
+	if err != nil {
+		service.SendErrorsResponse(w, userNotAuthenticated, http.StatusUnauthorized)
+		return
+	}
+
+	service.SendJsonResponse(w, struct {
+		User types.User `json:"user"`
+	}{User: user}, http.StatusOK)
 }
 
 func hashPassword(password string) (string, error) {

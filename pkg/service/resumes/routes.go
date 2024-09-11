@@ -10,6 +10,7 @@ import (
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/utils"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -34,7 +35,7 @@ func (h *Handler) AddRoutes(r chi.Router) {
 func (h *Handler) handleResumes(w http.ResponseWriter, r *http.Request) {
 	pagination := service.GetPaginationParams(r)
 
-	userId := r.Context().Value(service.UserIdKey)
+	userId := r.Context().Value(utils.UserIdKey)
 	if userId == 0 {
 		service.SendErrorsResponse(w, []string{"Unauthorized"}, http.StatusUnauthorized)
 		return
@@ -56,7 +57,7 @@ func (h *Handler) handleSingleResume(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userId := r.Context().Value(service.UserIdKey).(int)
+	userId := r.Context().Value(utils.UserIdKey).(int)
 	if userId == 0 {
 		service.SendErrorsResponse(w, []string{"Unauthorized"}, http.StatusUnauthorized)
 		return
@@ -85,7 +86,7 @@ func (h *Handler) handlePostResume(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userId := r.Context().Value(service.UserIdKey).(int)
+	userId := r.Context().Value(utils.UserIdKey).(int)
 	if userId == 0 {
 		service.SendErrorsResponse(w, []string{"Unauthorized"}, http.StatusUnauthorized)
 		return
@@ -116,7 +117,7 @@ func (h *Handler) handlePutResume(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userId := r.Context().Value(service.UserIdKey).(int)
+	userId := r.Context().Value(utils.UserIdKey).(int)
 	if userId == 0 {
 		service.SendErrorsResponse(w, []string{"Unauthorized"}, http.StatusUnauthorized)
 		return

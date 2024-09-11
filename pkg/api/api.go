@@ -8,10 +8,10 @@ import (
 
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/middleware"
-	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service/applications"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service/auth"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service/resumes"
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/utils"
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -30,7 +30,7 @@ func NewAPIServer(port string, db *db.DbConnection) *APIServer {
 }
 
 func (s *APIServer) Start() error {
-	err := service.JwtClient.InitJwtAuth()
+	err := utils.JwtClient.InitJwtAuth()
 	if err != nil {
 		log.Fatal("Could not initialize jwt auth: ", err)
 	}
@@ -47,7 +47,7 @@ func (s *APIServer) Start() error {
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
 		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: false,
+		AllowCredentials: true,
 		MaxAge:           300,
 	}))
 
@@ -58,14 +58,15 @@ func (s *APIServer) Start() error {
 	})
 
 	r.Route("/api/v1", func(r chi.Router) {
+		authStore := auth.NewStore(s.db)
+
 		r.Group(func(r chi.Router) {
-			authStore := auth.NewStore(s.db)
 			authHandler := auth.NewHandler(authStore)
 			authHandler.AddRoutes(r)
 		})
 
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.JwtAuthenticator())
+			r.Use(middleware.Authenticator(authStore))
 
 			resumeStore := resumes.NewStore(s.db)
 			resumeHandler := resumes.NewHandler(*resumeStore)

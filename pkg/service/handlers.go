@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/utils"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -27,7 +28,7 @@ type SendJson[T any] func(w http.ResponseWriter, data T, statusCode int)
 func CreateGetAllHandler[T Validatable](h GenericHttpHandler[T], sendJson SendJsonWithPagination[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		pagination := GetPaginationParams(r)
-		userId := r.Context().Value(UserIdKey).(int)
+		userId := r.Context().Value(utils.UserIdKey).(int)
 
 		data, err := h.GetMultiple(userId, pagination)
 		if err != nil {
@@ -47,7 +48,7 @@ var (
 
 func CreateGetSingleHandler[T Validatable](h GenericHttpHandler[T], sendJson SendJson[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userId := r.Context().Value(UserIdKey).(int)
+		userId := r.Context().Value(utils.UserIdKey).(int)
 		itemId, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil {
 			SendErrorsResponse(w, paramNotParsable, http.StatusBadRequest)
@@ -80,7 +81,7 @@ func CreatePostHandler[T Validatable](h GenericHttpHandler[T], sendJson SendJson
 			return
 		}
 
-		userId := r.Context().Value(UserIdKey).(int)
+		userId := r.Context().Value(utils.UserIdKey).(int)
 		data, err := h.Create(userId, body)
 
 		switch err {
@@ -105,7 +106,7 @@ func CreatePutHandler[T Validatable](h GenericHttpHandler[T], sendJson SendJson[
 			return
 		}
 
-		userId := r.Context().Value(UserIdKey).(int)
+		userId := r.Context().Value(utils.UserIdKey).(int)
 		data, err := h.Update(userId, body)
 		switch err {
 		case nil:
@@ -126,7 +127,7 @@ func CreateDeleteHandler[T Validatable](h GenericHttpHandler[T], sendJson SendJs
 			return
 		}
 
-		userId := r.Context().Value(UserIdKey).(int)
+		userId := r.Context().Value(utils.UserIdKey).(int)
 		deletedCount, err := h.Delete(userId, itemId)
 		if deletedCount == 0 {
 			SendErrorsResponse(w, notFoundDeleted, http.StatusNotFound)

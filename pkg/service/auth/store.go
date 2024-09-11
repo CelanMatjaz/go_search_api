@@ -62,6 +62,7 @@ func (s *Store) getUser(whereClause string, value any) (types.User, error) {
             last_name,
             email,
             password_hash,
+            refresh_token_version,
             created_at,
             updated_at
         FROM users `+whereClause,
@@ -83,6 +84,7 @@ func scanUserRow(row *sql.Row) (types.User, error) {
 		&user.LastName,
 		&user.Email,
 		&user.PasswordHash,
+		&user.TokenVersion,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)

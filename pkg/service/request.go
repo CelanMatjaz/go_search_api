@@ -7,8 +7,6 @@ import (
 	"time"
 )
 
-var UserIdKey = "usr_id"
-
 type response struct {
 	Timestamp  time.Time `json:"timestamp"`
 	StatusCode int       `json:"status_code"`

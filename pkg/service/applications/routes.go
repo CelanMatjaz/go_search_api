@@ -2,7 +2,6 @@ package applications
 
 import (
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
-	"github.com/CelanMatjaz/job_application_tracker_api/pkg/middleware"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
 	"github.com/go-chi/chi/v5"
@@ -18,8 +17,6 @@ func NewHandler(store db.ApplicationStore) *Handler {
 
 func (h *Handler) AddRoutes(r chi.Router) {
 	r.Route("/applications", func(r chi.Router) {
-		r.Use(middleware.JwtAuthenticator())
-
 		handler := ApplicationHandler{h.store}
 		r.Get("/", service.CreateGetAllHandler[types.Application](handler, sendJsonApplications))
 		r.Get("/{id}", service.CreateGetSingleHandler[types.Application](handler, sendJsonApplication))
@@ -29,8 +26,6 @@ func (h *Handler) AddRoutes(r chi.Router) {
 	})
 
 	r.Route("/application-sections", func(r chi.Router) {
-		r.Use(middleware.JwtAuthenticator())
-
 		handler := SectionHandler{h.store}
 		r.Get("/", service.CreateGetAllHandler[types.ApplicationSection](handler, sendJsonSections))
 		r.Post("/", service.CreatePostHandler[types.ApplicationSection](handler, sendJsonSection))
