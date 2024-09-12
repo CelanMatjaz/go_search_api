@@ -1,12 +1,13 @@
 package auth
 
 import (
+	"database/sql"
+
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
 )
 
 type RegisterBody struct {
-	FirstName      string `json:"first_name"`
-	LastName       string `json:"last_name"`
+	DisplayName    string `json:"display_name"`
 	Email          string `json:"email"`
 	Password       string `json:"password"`
 	PasswordVerify string `json:"password_verify"`
@@ -15,8 +16,7 @@ type RegisterBody struct {
 func (r *RegisterBody) IsValid() []string {
 	errors := make([]string, 0)
 
-	if r.FirstName == "" ||
-		r.LastName == "" ||
+	if r.DisplayName == "" ||
 		r.Email == "" ||
 		r.Password == "" ||
 		r.PasswordVerify == "" {
@@ -55,10 +55,10 @@ func (r *RegisterBody) IsValid() []string {
 
 func (r *RegisterBody) CreateUser(passwordHash string) types.User {
 	return types.User{
-		FirstName:    r.FirstName,
-		LastName:     r.LastName,
+		DisplayName:  r.DisplayName,
 		Email:        r.Email,
-		PasswordHash: passwordHash,
+		PasswordHash: sql.NullString{String: passwordHash, Valid: true},
+		TokenVersion: 1,
 	}
 }
 

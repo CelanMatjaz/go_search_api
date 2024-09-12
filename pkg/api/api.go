@@ -43,7 +43,6 @@ func (s *APIServer) Start() error {
 	r := chi.NewRouter()
 
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{allowedOrigin},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
 		ExposedHeaders:   []string{"Link"},
@@ -54,7 +53,7 @@ func (s *APIServer) Start() error {
 	r.Use(chiMiddleware.StripSlashes)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(fmt.Sprint("Test")))
+		w.WriteHeader(http.StatusOK)
 	})
 
 	r.Route("/api/v1", func(r chi.Router) {
