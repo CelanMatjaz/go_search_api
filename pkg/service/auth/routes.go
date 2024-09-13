@@ -60,17 +60,19 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 	existingUser, err := h.store.GetUserByEmail(body.Email)
 
-	switch err {
-	case types.UserDoesNotExistErr:
-	case nil:
-		break
-	default:
-		service.SendInternalServerError(w)
-		return
+	if err != nil {
+		switch err {
+		case types.UserDoesNotExistErr:
+			break
+		default:
+			service.SendInternalServerError(w)
+			return
+		}
 	}
 
 	if existingUser.Email == body.Email {
 		service.SendErrorsResponse(w, userWithEmailAlreadyExists, http.StatusBadRequest)
+        return
 	}
 
 	hash, err := hashPassword(body.Password)
@@ -195,11 +197,14 @@ func (h *Handler) handleOAuth(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case types.UserDoesNotExistErr:
-			h.store.CreateUserWithOAuth(types.User{
+			user, err = h.store.CreateUserWithOAuth(types.User{
 				DisplayName: infoResponse.Name,
 				Email:       infoResponse.Email,
 			}, tokenResponse, oauthClient.Id)
 
+			if err == nil {
+				break
+			}
 		default:
 			service.SendInternalServerError(w)
 			return
@@ -215,7 +220,6 @@ func (h *Handler) handleOAuth(w http.ResponseWriter, r *http.Request) {
 	service.SendJsonResponse(w, struct {
 		User types.User `json:"user"`
 	}{User: user}, http.StatusOK)
-
 }
 
 func makeRequest[ResponseBody any](url string, method string, headers map[string]string, requestBody []byte) (ResponseBody, int, error) {

@@ -9,7 +9,8 @@ type AuthStore interface {
 	GetUserById(userId int) (types.User, error)
 	GetUserByEmail(email string) (types.User, error)
 	CreateUser(user types.User) (types.User, error)
-	CreateUserWithOAuth(user types.User, tokenResponse types.TokenResponse, clientId int) error
+	CreateUserWithOAuth(user types.User, tokenResponse types.TokenResponse, clientId int) (types.User, error)
+
 	UpdateUserToOAuth(user types.User, tokenResponse types.TokenResponse, clientId int) error
 
 	GetOauthClientByName(name string) (types.OAuthClient, error)

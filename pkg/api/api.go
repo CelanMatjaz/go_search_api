@@ -43,6 +43,7 @@ func (s *APIServer) Start() error {
 	r := chi.NewRouter()
 
 	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{allowedOrigin},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
 		ExposedHeaders:   []string{"Link"},

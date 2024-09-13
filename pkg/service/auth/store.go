@@ -89,20 +89,28 @@ func (s *Store) getUser(whereClause string, value any) (types.User, error) {
 	return user, nil
 }
 
-func (s *Store) CreateUserWithOAuth(user types.User, tokenResponse types.TokenResponse, clientId int) error {
-	var id int
-	err := s.db.QueryRow(`
-        INSERT INTO users (display_name, email) 
+func (s *Store) CreateUserWithOAuth(user types.User, tokenResponse types.TokenResponse, clientId int) (types.User, error) {
+	row := s.db.QueryRow(`
+        INSERT INTO users AS u (display_name, email) 
         VALUES ($1, $2)
-        RETURNING id`,
+        RETURNING
+            u.id, 
+            u.display_name,
+            u.email,
+            NULL password_hash,
+            u.refresh_token_version,
+            u.created_at,
+            u.updated_at`,
 		user.DisplayName,
 		user.Email,
-	).Scan(&id)
+	)
+	user, err := scanUserRow(row)
 	if err != nil {
-		return err
+		return user, err
 	}
 
-	return s.createAccountOAuthData(id, clientId, tokenResponse)
+	err = s.createAccountOAuthData(user.Id, clientId, tokenResponse)
+	return user, err
 }
 
 func (s *Store) createAccountOAuthData(userId int, oautClientId int, tokenResponse types.TokenResponse) error {
