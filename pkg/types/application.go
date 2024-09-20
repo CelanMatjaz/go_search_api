@@ -1,57 +1,63 @@
 package types
 
-import (
-	"strconv"
-)
-
-type Application struct {
-	Common
-	UserId int    `json:"user_id" db:"user_id"`
-	Label  string `json:"label" db:"label"`
-	Text   string `json:"text" db:"text"`
-	Timestamps
-}
-
 type ApplicationSection struct {
 	Common
-	UserId int    `json:"user_id" db:"user_id"`
-	Label  string `json:"label" db:"label"`
-	Text   string `json:"text" db:"text"`
+	AccountId int    `json:"accountId" db:"account_id"`
+	Label     string `json:"label" db:"label"`
+	Text      string `json:"text" db:"text"`
 	Timestamps
 }
 
-const (
-	MAX_TEXT_LENGTH = 512
-)
+type ApplicationPreset struct {
+	Common
+	AccountId int    `json:"accountId" db:"account_id"`
+	Label     string `json:"label" db:"label"`
+	Timestamps
+}
 
-var (
-	labelError = "Value of label is not 1 to 64 characters long"
-	textError  = "Value of text is not 1 to " + strconv.Itoa(MAX_TEXT_LENGTH) + " characters long"
-)
+type ApplicationPresetBody struct {
+	Label      string `json:"label" db:"label"`
+	SectionIds []int  `json:"sectionIds"`
+}
 
-func (b Application) IsValid() []string {
+func (b ApplicationPresetBody) Verify() []string {
 	errors := make([]string, 0)
 
-	if len(b.Label) < 1 || len(b.Label) > 64 {
-		errors = append(errors, labelError)
+	if b.Label == "" {
+		errors = append(errors, "Property label missing from JSON body")
 	}
 
-	if len(b.Text) < 1 || len(b.Text) > MAX_TEXT_LENGTH {
-		errors = append(errors, textError)
+	if len(b.Label) > 64 {
+		errors = append(errors, "Label cannot be more than 64 characters long")
 	}
 
 	return errors
 }
 
-func (b ApplicationSection) IsValid() []string {
+type ApplicationSectionBody struct {
+	Label string `json:"label" db:"label"`
+	Text  string `json:"text" db:"text"`
+}
+
+func (b ApplicationSectionBody) Verify() []string {
 	errors := make([]string, 0)
 
-	if len(b.Label) < 1 || len(b.Label) > 64 {
-		errors = append(errors, labelError)
+	if b.Label == "" {
+		errors = append(errors, "Property label missing from JSON body")
+	}
+	if b.Text == "" {
+		errors = append(errors, "Property text missing from JSON body")
 	}
 
-	if len(b.Text) < 1 || len(b.Text) > MAX_TEXT_LENGTH {
-		errors = append(errors, textError)
+	if len(errors) > 0 {
+		return errors
+	}
+
+	if len(b.Label) > 64 {
+		errors = append(errors, "Label cannot be more than 64 characters long")
+	}
+	if len(b.Text) > 64 {
+		errors = append(errors, "Text cannot be more than 1024 characters long")
 	}
 
 	return errors

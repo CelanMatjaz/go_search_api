@@ -2,131 +2,86 @@ package middleware
 
 import (
 	"context"
+	"log"
 	"net/http"
 
-	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service"
-	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service/auth"
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/utils"
 )
 
-var (
-	invalidToken    = []string{"Invalid access token"}
-	missingCookie   = []string{"Missing cookie"}
-	unauthenticated = []string{"Unauthenticated"}
-)
+var AccountIdKey = "account_id"
 
-func Authenticator(s *auth.Store) func(http.Handler) http.Handler {
+func Authenticator(s db.AuthStore) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		hfn := func(w http.ResponseWriter, r *http.Request) {
-			userId, err := verifyAccessToken(r)
-			if err == nil {
-				ctx := r.Context()
-				ctx = context.WithValue(ctx, utils.UserIdKey, userId)
-				next.ServeHTTP(w, r.WithContext(ctx))
-				return
+			newRequest, err := authMiddlewareHandler(w, r, s)
+			if err != nil {
+				if error, ok := err.(types.ApiError); ok {
+					utils.SendErrors(w, error.Errors, error.StatusCode)
+				} else {
+					log.Println("Internal server error: ", error.Error())
+					utils.SendInternalServerError(w)
+				}
+			} else {
+				next.ServeHTTP(w, newRequest)
 			}
-			if handled := handleAccessTokenVerificationError(w, r, err); handled {
-				return
-			}
-
-			userId, version, err := verifyRefreshToken(r, s)
-			if handled := handleRefreshTokenVerificationError(w, r, err); handled {
-				return
-			}
-
-			if handled := setCookies(w, userId, version); handled {
-				return
-			}
-
-			ctx := r.Context()
-			ctx = context.WithValue(ctx, utils.UserIdKey, userId)
-			next.ServeHTTP(w, r.WithContext(ctx))
 		}
+
 		return http.HandlerFunc(hfn)
 	}
 }
 
-func handleAccessTokenVerificationError(w http.ResponseWriter, r *http.Request, err error) bool {
-	switch err {
-	case nil:
-	case types.InvalidTokenErr:
-	case types.UnauthenticatedErr:
-		return false
-	case types.MissingCookieErr:
-		service.SendErrorsResponse(w, missingCookie, http.StatusUnauthorized)
-		return true
-	default:
-		service.SendInternalServerError(w)
-		return true
+func authMiddlewareHandler(w http.ResponseWriter, r *http.Request, s db.AuthStore) (*http.Request, error) {
+	accountId, ok := verifyAccessToken(r)
+	if ok {
+		ctx := context.WithValue(r.Context(), AccountIdKey, accountId)
+		r = r.WithContext(ctx)
+		return r, nil
 	}
 
-	return false
+	accountId, tokenVersion, ok := verifyRefreshToken(r, s)
+	if !ok {
+		utils.InvalidateAuthCookies(w)
+		return nil, types.Unauthenticated
+	}
+
+	if err := utils.CreateAndSetAuthCookies(w, accountId, tokenVersion); err != nil {
+		return nil, err
+	}
+
+	ctx := context.WithValue(r.Context(), AccountIdKey, accountId)
+	r = r.WithContext(ctx)
+	return r, nil
 }
 
-func handleRefreshTokenVerificationError(w http.ResponseWriter, r *http.Request, err error) bool {
-	switch err {
-	case nil:
-	case types.InvalidTokenErr:
-		return false
-	case types.MissingCookieErr:
-		service.SendErrorsResponse(w, invalidToken, http.StatusUnauthorized)
-		return true
-	case types.UnauthenticatedErr:
-		service.SendErrorsResponse(w, unauthenticated, http.StatusUnauthorized)
-		return true
-	default:
-		service.SendInternalServerError(w)
-		return true
-	}
-
-	return false
-}
-
-func setCookies(w http.ResponseWriter, userId int, version int) bool {
-	newAccessToken, err := utils.JwtClient.CreateAccessToken(userId)
-	if err != nil {
-		service.SendInternalServerError(w)
-		return true
-	}
-	utils.CreateAndSetCookie(w, utils.AccessTokenName, newAccessToken)
-
-	newRefreshToken, _ := utils.JwtClient.CreateRefreshToken(userId, version)
-	if err != nil {
-		service.SendInternalServerError(w)
-		return true
-	}
-	utils.CreateAndSetCookie(w, utils.RefreshTokenName, newRefreshToken)
-
-	return false
-}
-
-func verifyAccessToken(r *http.Request) (int, error) {
+func verifyAccessToken(r *http.Request) (int, bool) {
 	accessTokenCookie, err := r.Cookie(utils.AccessTokenName)
 	if err != nil {
-		return 0, types.MissingCookieErr
+		return 0, false
 	}
-	return utils.JwtClient.VerifyAccessToken(accessTokenCookie.Value)
+	return utils.VerifyAccessToken(accessTokenCookie.Value)
 }
 
-func verifyRefreshToken(r *http.Request, s *auth.Store) (int, int, error) {
+func verifyRefreshToken(r *http.Request, s db.AuthStore) (int, int, bool) {
 	refreshTokenCookie, err := r.Cookie(utils.RefreshTokenName)
 	if err != nil {
-		return 0, 0, types.MissingCookieErr
+		return 0, 0, false
 	}
-	userId, version, err := utils.JwtClient.VerifyRefreshToken(refreshTokenCookie.Value)
+
+	accountId, version, ok := utils.VerifyRefreshToken(refreshTokenCookie.Value)
+	if !ok {
+		return 0, 0, false
+	}
+
+	account, err := s.GetAccountById(accountId)
 	if err != nil {
-		return 0, 0, types.UnauthenticatedErr
+		return 0, 0, false
 	}
 
-	user, err := s.GetUserById(userId)
-	if err != nil {
-		return 0, 0, err
+	if account.TokenVersion != version {
+		return 0, 0, false
 	}
 
-	if user.TokenVersion != version {
-		return 0, 0, types.InvalidTokenErr
-	}
-
-	return user.Id, user.TokenVersion, nil
+	return account.Id, account.TokenVersion, true
 }

@@ -3,13 +3,27 @@ package types
 import "errors"
 
 var (
-	RecordDoesNotExist            = errors.New("requested record does not exist")
-	MissingCookieErr              = errors.New("missing cookie")
-	InvalidTokenErr               = errors.New("invalid token provided")
-	UnauthenticatedErr            = errors.New("unauthenticated")
-	UserDoesNotExistErr           = errors.New("user does not exist")
-	InvalidBodyErr                = errors.New("provided JSON body is not valid")
-	PasswordsDoNotMatchErr        = errors.New("passwords do not match")
-	WronglyFormattedAuthHeaderErr = errors.New("authentication error is not formatted correctly")
-	MissingRequiredHeaderErr      = errors.New("request is missing required header")
+	AccountAlreadyExistsErr = errors.New("account already exists")
+	AccountDoesNotExistErr  = errors.New("account does not")
+	RecordDoesNotExistErr   = errors.New("record does not exist")
+	InvalidJsonBodyErr      = errors.New("invalid json body")
+	InvalidTokenErr         = errors.New("invalid token")
+	MissingCookieErr        = errors.New("missing cookie")
+	UnknownOAuthProviderErr = errors.New("unknown oauth provider")
+	OAuthProviderIssuesErr  = errors.New("authentication issues with oauth provider")
+)
+
+var (
+	AccountAlreadyExistsErrors     = []string{"Account with provided email already exists"}
+	InternalServerErrors           = []string{"Internal server error"}
+	UnparseableJsonBodyErrors      = []string{"Provided JSON body is not parseable"}
+	InvalidJsonBodyErrors          = []string{"Provided JSON body is not valid"}
+	InvalidPasswordErrors          = []string{"Invalid password"}
+	InvalidTokenErrors             = []string{"Invalid auth token"}
+	UnauthenticatedErrors          = []string{"Unauthenticated"}
+	LoggedOutDueToInactivityErrors = []string{"Logged out due to inactivity"}
+	UnknownOAuthProviderErrors     = []string{"Unknown OAuth provider"}
+	OAuthProviderIssueErrors       = []string{"Issue with authenticating with OAuth provider"}
+	UnverifiedOAuthEmailErrors     = []string{"Email used to authenticate with OAuth is unverified"}
+	InvalidPathParamErrors         = []string{"Path param is not valid"}
 )

@@ -2,80 +2,49 @@ package api
 
 import (
 	"fmt"
-	"log"
 	"net/http"
-	"os"
 
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/handlers"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/middleware"
-	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service/applications"
-	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service/auth"
-	"github.com/CelanMatjaz/job_application_tracker_api/pkg/service/resumes"
-	"github.com/CelanMatjaz/job_application_tracker_api/pkg/utils"
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 )
 
-type APIServer struct {
-	port string
-	db   *db.DbConnection
+type Server struct {
+	port  string
+	store db.Store
 }
 
-func NewAPIServer(port string, db *db.DbConnection) *APIServer {
-	return &APIServer{
-		port: port,
-		db:   db,
+func CreateServer(port string, store db.Store) *Server {
+	return &Server{
+		port:  port,
+		store: store,
 	}
 }
 
-func (s *APIServer) Start() error {
-	err := utils.JwtClient.InitJwtAuth()
-	if err != nil {
-		log.Fatal("Could not initialize jwt auth: ", err)
-	}
-
-	allowedOrigin := os.Getenv("ALLOWED_ORIGIN")
-	if allowedOrigin == "" {
-		log.Fatal("Allowed origin for frontend not provided: ", err)
-	}
-
+func (s *Server) Start() error {
 	r := chi.NewRouter()
 
+	r.Use(chiMiddleware.StripSlashes)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{allowedOrigin},
+		AllowedOrigins:   []string{"http://localhost:3000"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
-		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
 
-	r.Use(chiMiddleware.StripSlashes)
-
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
-
-	r.Route("/api/v1", func(r chi.Router) {
-		authStore := auth.NewStore(s.db)
-		authenticator := middleware.Authenticator(authStore)
+	r.Route("/api", func(r chi.Router) {
+		authHandler := handlers.NewAuthHandler(s.store)
+		authHandler.AddRoutes(r)
 
 		r.Group(func(r chi.Router) {
-			authHandler := auth.NewHandler(authStore)
-			authHandler.AddRoutes(r, authenticator)
-		})
+			r.Use(middleware.Authenticator(s.store))
 
-		r.Group(func(r chi.Router) {
-			r.Use(authenticator)
-
-			resumeStore := resumes.NewStore(s.db)
-			resumeHandler := resumes.NewHandler(*resumeStore)
-			resumeHandler.AddRoutes(r)
-
-			applicationStore := applications.NewStore(s.db)
-			applicationHandler := applications.NewHandler(applicationStore)
-			applicationHandler.AddRoutes(r)
+			tagHandler := handlers.NewTagHandler(s.store)
+			tagHandler.AddRoutes(r)
 		})
 	})
 

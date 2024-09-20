@@ -1,7 +1,16 @@
 package types
 
-type Tag struct {
-	Common
-	UserId int    `json:"user_id" db:"user_id"`
-	Label  string `json:"label" db:"label"`
+import "time"
+
+type Common struct {
+	Id int `json:"id" db:"id"`
+}
+
+type Timestamps struct {
+	CreatedAt time.Time `db:"createdAt" json:"createdAt"`
+	UpdatedAt time.Time `db:"updatedAt" json:"updatedAt"`
+}
+
+type Verifiable interface {
+	Verify() []string
 }

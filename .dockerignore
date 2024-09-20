@@ -1,0 +1,5 @@
+migrations/
+cmd/migrate/
+cmd/create_migration/
+
+tmp/
