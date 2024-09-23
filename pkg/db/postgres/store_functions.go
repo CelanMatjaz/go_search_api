@@ -1,6 +1,9 @@
 package postgres
 
-import "github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
+import (
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
+)
 
 func getRecords[T any](s *PostgresStore, scan func(db.Scannable) (*T, error), query string, args ...any) ([]T, error) {
 	rows, err := s.Db.Query(query, args...)
@@ -31,11 +34,11 @@ func getRecord[T any](s *PostgresStore, scan func(db.Scannable) (*T, error), que
 }
 
 func createRecord[T any](s *PostgresStore, scan func(db.Scannable) (*T, error), query string, args ...any) (*T, error) {
-	return getRecord[T](s, scan, query, args)
+	return getRecord(s, scan, query, args)
 }
 
 func updateRecord[T any](s *PostgresStore, scan func(db.Scannable) (*T, error), query string, args ...any) (*T, error) {
-	return getRecord[T](s, scan, query, args)
+	return getRecord(s, scan, query, args)
 }
 
 func deleteRecord(s *PostgresStore, query string, args ...any) error {
@@ -45,4 +48,46 @@ func deleteRecord(s *PostgresStore, query string, args ...any) error {
 	}
 
 	return nil
+}
+
+type CanSetTags interface {
+	GetId() int
+	AppendTag(newTag *types.Tag)
+}
+
+func genericGetRecordsWithTags[T CanSetTags](
+	s *PostgresStore,
+	scan func(db.Scannable) (T, *types.Tag, error),
+	query string, accountId int,
+	pagination types.PaginationParams,
+) ([]T, error) {
+	rows, err := s.Db.Query(query, accountId, pagination.GetOffset(), pagination.Count)
+	if err != nil {
+		return nil, err
+	}
+
+	recordSet := make(map[int]int)
+	recordArr := make([]T, 0)
+
+	for rows.Next() {
+		scannedRecord, tag, err := scan(rows)
+
+		if err != nil {
+			println(err.Error())
+			return nil, err
+		}
+
+		recordIndex, exists := recordSet[scannedRecord.GetId()]
+		if !exists {
+			recordSet[scannedRecord.GetId()] = len(recordArr)
+			recordIndex = len(recordArr)
+			recordArr = append(recordArr, scannedRecord)
+		}
+
+		if tag.Id.Valid {
+			(recordArr[recordIndex]).AppendTag(tag)
+		}
+	}
+
+	return recordArr, nil
 }

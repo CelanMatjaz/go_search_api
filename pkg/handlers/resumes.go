@@ -20,7 +20,7 @@ func NewResumeHandler(store db.ResumeStore) *ResumeHandler {
 func (h *ResumeHandler) AddRoutes(r chi.Router) {
 	r.Route("/resumes", func(r chi.Router) {
 		r.Route("/presets", func(r chi.Router) {
-			r.Get("/", CreateHandler(createGenericGetManyHandler(h.store.GetResumePresets, sendResumePresets)))
+			r.Get("/", CreateHandler(createGenericGetManyWithPaginationHandler(h.store.GetResumePresets, sendResumePresets)))
 			r.Get("/{id}", CreateHandler(createGenericGetSingleHandler(h.store.GetResumePreset, sendResumePreset)))
 			r.Post("/", CreateHandler(createGenericPostHandler(h.store.CreateResumePreset, sendResumePreset)))
 			r.Put("/{id}", CreateHandler(createGenericPutHandler(h.store.UpdateResumePreset, sendResumePreset)))
@@ -28,7 +28,7 @@ func (h *ResumeHandler) AddRoutes(r chi.Router) {
 		})
 
 		r.Route("/sections", func(r chi.Router) {
-			r.Get("/", CreateHandler(createGenericGetManyHandler(h.store.GetResumeSections, sendResumeSections)))
+			r.Get("/", CreateHandler(createGenericGetManyWithPaginationHandler(h.store.GetResumeSections, sendResumeSections)))
 			r.Get("/{id}", CreateHandler(createGenericGetSingleHandler(h.store.GetResumeSection, sendResumeSection)))
 			r.Post("/", CreateHandler(createGenericPostHandler(h.store.CreateResumeSection, sendResumeSection)))
 			r.Put("/{id}", CreateHandler(createGenericPutHandler(h.store.UpdateResumeSection, sendResumeSection)))
@@ -37,9 +37,9 @@ func (h *ResumeHandler) AddRoutes(r chi.Router) {
 	})
 }
 
-func sendResumePresets(w http.ResponseWriter, data []types.ResumePreset) error {
+func sendResumePresets(w http.ResponseWriter, data []*types.ResumePreset) error {
 	return utils.SendJson(w, struct {
-		Presets []types.ResumePreset `json:"resumePresets"`
+		Presets []*types.ResumePreset `json:"resumePresets"`
 	}{Presets: data}, http.StatusOK)
 }
 
@@ -49,9 +49,9 @@ func sendResumePreset(w http.ResponseWriter, data *types.ResumePreset) error {
 	}{Preset: *data}, http.StatusOK)
 }
 
-func sendResumeSections(w http.ResponseWriter, data []types.ResumeSection) error {
+func sendResumeSections(w http.ResponseWriter, data []*types.ResumeSection) error {
 	return utils.SendJson(w, struct {
-		Sections []types.ResumeSection `json:"resumeSections"`
+		Sections []*types.ResumeSection `json:"resumeSections"`
 	}{Sections: data}, http.StatusOK)
 }
 

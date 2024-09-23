@@ -1,10 +1,35 @@
 package types
 
+import (
+	"database/sql"
+	"encoding/json"
+)
+
+type NullString struct {
+	sql.NullString
+}
+
+func (ns NullString) MarshalJSON() ([]byte, error) {
+	if !ns.Valid {
+		return json.Marshal(nil)
+	}
+	return json.Marshal(ns.String)
+}
+
+type NullInt64 struct{ sql.NullInt64 }
+
+func (ni NullInt64) MarshalJSON() ([]byte, error) {
+	if !ni.Valid {
+		return json.Marshal(nil)
+	}
+	return json.Marshal(ni.Int64)
+}
+
 type Tag struct {
-	Common
-	AccountId int    `json:"accountId" db:"account_id"`
-	Label     string `json:"label" db:"label"`
-	Color     string `json:"color" db:"color"`
+	Id        NullInt64  `json:"id" db:"id"`
+    AccountId NullInt64  `json:"-" db:"account_id"`
+	Label     NullString `json:"label" db:"label"`
+	Color     NullString `json:"color" db:"color"`
 }
 
 type TagBody struct {

@@ -6,6 +6,7 @@ type Store interface {
 	AuthStore
 	TagStore
 	ApplicationStore
+	ResumeStore
 }
 
 type AuthStore interface {
@@ -31,13 +32,13 @@ type TagStore interface {
 }
 
 type ApplicationStore interface {
-	GetApplicationPresets(accountId int) ([]types.ApplicationPreset, error)
+	GetApplicationPresets(accountId int, pagination types.PaginationParams) ([]*types.ApplicationPreset, error)
 	GetApplicationPreset(accountId int, presetId int) (*types.ApplicationPreset, error)
 	CreateApplicationPreset(accountId int, presetId types.ApplicationPresetBody) (*types.ApplicationPreset, error)
 	UpdateApplicationPreset(accountId int, presetId int, preset types.ApplicationPresetBody) (*types.ApplicationPreset, error)
 	DeleteApplicationPreset(accountId int, presetId int) error
 
-	GetApplicationSections(accountId int) ([]types.ApplicationSection, error)
+	GetApplicationSections(accountId int, pagination types.PaginationParams) ([]*types.ApplicationSection, error)
 	GetApplicationSection(accountId int, presetId int) (*types.ApplicationSection, error)
 	CreateApplicationSection(accountId int, presetId types.ApplicationSectionBody) (*types.ApplicationSection, error)
 	UpdateApplicationSection(accountId int, presetId int, preset types.ApplicationSectionBody) (*types.ApplicationSection, error)
@@ -45,13 +46,13 @@ type ApplicationStore interface {
 }
 
 type ResumeStore interface {
-	GetResumePresets(accountId int) ([]types.ResumePreset, error)
+	GetResumePresets(accountId int, pagination types.PaginationParams) ([]*types.ResumePreset, error)
 	GetResumePreset(accountId int, presetId int) (*types.ResumePreset, error)
 	CreateResumePreset(accountId int, presetId types.ResumePresetBody) (*types.ResumePreset, error)
 	UpdateResumePreset(accountId int, presetId int, preset types.ResumePresetBody) (*types.ResumePreset, error)
 	DeleteResumePreset(accountId int, presetId int) error
 
-	GetResumeSections(accountId int) ([]types.ResumeSection, error)
+	GetResumeSections(accountId int, pagination types.PaginationParams) ([]*types.ResumeSection, error)
 	GetResumeSection(accountId int, presetId int) (*types.ResumeSection, error)
 	CreateResumeSection(accountId int, presetId types.ResumeSectionBody) (*types.ResumeSection, error)
 	UpdateResumeSection(accountId int, presetId int, preset types.ResumeSectionBody) (*types.ResumeSection, error)

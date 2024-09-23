@@ -23,25 +23,27 @@ CREATE TABLE IF NOT EXISTS application_sections (
 );
 
 CREATE TABLE IF NOT EXISTS mtm_tags_application_presets (
+    id SERIAL PRIMARY KEY,
     tag_id INT NOT NULL,
-    preset_id INT NOT NULL,
-    UNIQUE (tag_id, preset_id),
+    record_id INT NOT NULL,
+    UNIQUE (tag_id, record_id),
 
     CONSTRAINT tag_has_many_application_presets
     FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE,
 
     CONSTRAINT application_preset_has_many_tags
-    FOREIGN KEY (preset_id) REFERENCES application_presets(id) ON DELETE CASCADE
+    FOREIGN KEY (record_id) REFERENCES application_presets(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS mtm_tags_application_sections (
+    id SERIAL PRIMARY KEY,
     tag_id INT NOT NULL,
-    section_id INT NOT NULL,
-    UNIQUE (tag_id, section_id),
+    record_id INT NOT NULL,
+    UNIQUE (tag_id, record_id),
 
     CONSTRAINT tag_has_many_application_sections
     FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE,
 
     CONSTRAINT application_section_has_many_tags
-    FOREIGN KEY (section_id) REFERENCES application_sections(id) ON DELETE CASCADE
+    FOREIGN KEY (record_id) REFERENCES application_sections(id) ON DELETE CASCADE
 );

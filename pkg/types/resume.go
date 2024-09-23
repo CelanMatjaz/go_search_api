@@ -5,6 +5,7 @@ type ResumeSection struct {
 	AccountId int    `json:"accountId" db:"account_id"`
 	Label     string `json:"label" db:"label"`
 	Text      string `json:"text" db:"text"`
+	WithTags
 	Timestamps
 }
 
@@ -12,6 +13,7 @@ type ResumePreset struct {
 	Common
 	AccountId int    `json:"accountId" db:"account_id"`
 	Label     string `json:"label" db:"label"`
+	WithTags
 	Timestamps
 }
 

@@ -36,7 +36,7 @@ var (
 	UnknownOAuthProvider = CreateApiError(UnknownOAuthProviderErr, UnknownOAuthProviderErrors, http.StatusNotFound)
 	OAuthProviderIssues  = CreateApiError(OAuthProviderIssuesErr, OAuthProviderIssueErrors, http.StatusServiceUnavailable)
 	UnverifiedOAuthEmail = CreateApiError(nil, UnverifiedOAuthEmailErrors, http.StatusServiceUnavailable)
-	InvalidPathParam      = CreateApiError(nil, UnauthenticatedErrors, http.StatusUnauthorized)
+	InvalidPathParam     = CreateApiError(nil, UnauthenticatedErrors, http.StatusUnauthorized)
 )
 
 const (

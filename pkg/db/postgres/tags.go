@@ -36,18 +36,17 @@ func (s *PostgresStore) DeleteTag(accountId int, tagId int) error {
 	return deleteRecord(s, "DELETE FROM tags WHERE account_id = $1 AND id = $2", accountId, tagId)
 }
 
-func createTagJoinQuery(tableName string, colName string) string {
+func createTagJoinQuery(tableName string) string {
 	return fmt.Sprintf(
-		`SELECT * FROM tags LEFT JOIN %s t 
-        ON t.tag_id = tag.id 
-        WHERE tags.account_id = $1 AND t.%s = $2`, tableName, colName)
+		`SELECT * FROM tags LEFT JOIN %s t ON t.tag_id = tag.id 
+        WHERE tags.account_id = $1 AND t.record_id = $2`, tableName)
 }
 
 var (
-	applicationPresetTagsQuery  = createTagJoinQuery("mtm_tags_application_presets", "preset_id")
-	applicationSectionTagsQuery = createTagJoinQuery("mtm_tags_application_sections", "section_id")
-	resumePresetTagsQuery       = createTagJoinQuery("mtm_tags_resume_presets", "preset_id")
-	resumeSectionTagsQuery      = createTagJoinQuery("mtm_tags_resume_sections", "section_id")
+	applicationPresetTagsQuery  = createTagJoinQuery("mtm_tags_application_presets")
+	applicationSectionTagsQuery = createTagJoinQuery("mtm_tags_application_sections")
+	resumePresetTagsQuery       = createTagJoinQuery("mtm_tags_resume_presets")
+	resumeSectionTagsQuery      = createTagJoinQuery("mtm_tags_resume_sections")
 )
 
 func (s *PostgresStore) GetApplicationPresetTags(accountId int, applicationId int) ([]types.Tag, error) {
@@ -75,6 +74,24 @@ func (s *PostgresStore) GetResumeSectionTags(accountId int, resumeSectionId int)
 		accountId, resumeSectionId,
 	)
 }
+
+func createRecordWithTagsQuery(tableName string, associationTableName string) string {
+	return fmt.Sprintf(
+		`   WITH limited_records AS (
+                SELECT *
+                FROM %s r
+                WHERE account_id = $1
+                ORDER BY r.id
+                OFFSET $2 LIMIT $3
+            )
+            SELECT lr.*, t.*
+            FROM limited_records lr
+            LEFT JOIN %s ta ON lr.id = ta.record_id
+            LEFT JOIN tags t ON ta.tag_id = t.id;`, tableName, associationTableName)
+}
+
+var (
+)
 
 func scanTagRow(row db.Scannable) (*types.Tag, error) {
 	tag := &types.Tag{}

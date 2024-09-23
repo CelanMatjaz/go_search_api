@@ -45,6 +45,12 @@ func (s *Server) Start() error {
 
 			tagHandler := handlers.NewTagHandler(s.store)
 			tagHandler.AddRoutes(r)
+
+			applicationHandler := handlers.NewApplicationHandler(s.store)
+			applicationHandler.AddRoutes(r)
+
+			resumeHandler := handlers.NewResumeHandler(s.store)
+			resumeHandler.AddRoutes(r)
 		})
 	})
 
