@@ -1,6 +1,8 @@
 package postgres
 
 import (
+	"database/sql"
+
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
 )
@@ -33,16 +35,34 @@ func getRecord[T any](s *PostgresStore, scan func(db.Scannable) (*T, error), que
 	return record, nil
 }
 
-func createRecord[T any](s *PostgresStore, scan func(db.Scannable) (*T, error), query string, args ...any) (*T, error) {
-	return getRecord(s, scan, query, args)
+func createRecord[T any](tx *sql.Tx, scan func(db.Scannable) (*T, error), query string, args ...any) (*T, error) {
+	row := tx.QueryRow(query, args...)
+	record, err := scan(row)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return record, nil
 }
 
-func updateRecord[T any](s *PostgresStore, scan func(db.Scannable) (*T, error), query string, args ...any) (*T, error) {
-	return getRecord(s, scan, query, args)
+func createRecordWithTags[T any](tx *sql.Tx, scan func(db.Scannable) (*T, error), query string, args ...any) (*T, error) {
+	row := tx.QueryRow(query, args...)
+	record, err := scan(row)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return record, nil
 }
 
-func deleteRecord(s *PostgresStore, query string, args ...any) error {
-	_, err := s.Db.Exec(query, args...)
+func updateRecord[T any](tx *sql.Tx, scan func(db.Scannable) (*T, error), query string, args ...any) (*T, error) {
+	return createRecord(tx, scan, query, args...)
+}
+
+func deleteRecord(tx *sql.Tx, query string, args ...any) error {
+	_, err := tx.Exec(query, args...)
 	if err != nil {
 		return err
 	}
@@ -73,7 +93,6 @@ func genericGetRecordsWithTags[T CanSetTags](
 		scannedRecord, tag, err := scan(rows)
 
 		if err != nil {
-			println(err.Error())
 			return nil, err
 		}
 

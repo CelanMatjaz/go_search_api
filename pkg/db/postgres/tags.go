@@ -3,6 +3,7 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
@@ -17,23 +18,23 @@ func (s *PostgresStore) GetTag(accountId int, tagId int) (*types.Tag, error) {
 }
 
 func (s *PostgresStore) CreateTag(accountId int, tag types.TagBody) (*types.Tag, error) {
-	return createRecord(
-		s, scanTagRow,
+	return WithTransactionScan(
+		s, createRecord, scanTagRow,
 		"INSERT INTO tags (account_id, label, color) VALUES ($1, $2, $3) RETURNING *",
 		accountId, tag.Label, tag.Color,
 	)
 }
 
 func (s *PostgresStore) UpdateTag(accountId int, tagId int, tag types.TagBody) (*types.Tag, error) {
-	return updateRecord(
-		s, scanTagRow,
+	return WithTransactionScan(
+		s, updateRecord, scanTagRow,
 		"UPDATE tags SET label = $1, color = $2 WHERE id = $3 AND account_id = $4 RETURNING *",
 		tag.Label, tag.Color, tagId, accountId,
 	)
 }
 
 func (s *PostgresStore) DeleteTag(accountId int, tagId int) error {
-	return deleteRecord(s, "DELETE FROM tags WHERE account_id = $1 AND id = $2", accountId, tagId)
+	return WithTransaction(s, deleteRecord, "DELETE FROM tags WHERE account_id = $1 AND id = $2", accountId, tagId)
 }
 
 func createTagJoinQuery(tableName string) string {
@@ -62,17 +63,46 @@ func (s *PostgresStore) GetApplicationSectionTags(accountId int, applicationSect
 		accountId, applicationSectionId,
 	)
 }
+
 func (s *PostgresStore) GetResumePresetTags(accountId int, resumeId int) ([]types.Tag, error) {
 	return getRecords(
 		s, scanTagRow, resumePresetTagsQuery,
 		accountId, resumeId,
 	)
 }
+
 func (s *PostgresStore) GetResumeSectionTags(accountId int, resumeSectionId int) ([]types.Tag, error) {
 	return getRecords(
 		s, scanTagRow, resumeSectionTagsQuery,
 		accountId, resumeSectionId,
 	)
+}
+
+func recordWithTagsQuery(recordTable string, mtmTable string) (string, string) {
+	left := fmt.Sprintf(`
+    WITH new_record AS (
+        INSERT INTO %s (account_id, label, text) 
+        VALUES ($1, $2, $3)
+        RETURNING *
+    ),
+    _ AS (
+        INSERT INTO %s (tag_id, record_id) 
+        VALUES 
+    `, recordTable, mtmTable)
+
+	right := `) SELECT cs.* FROM new_record cs`
+
+	return left, right
+}
+
+func generateTagInsertString(tagIds []int) string {
+	sections := make([]string, len(tagIds))
+	start := 4 // start is based on above function args
+	for i := range tagIds {
+		sections[i] = fmt.Sprintf("($%d, (SELECT id FROM new_record))", i+start)
+	}
+
+	return strings.Join(sections, ",")
 }
 
 func createRecordWithTagsQuery(tableName string, associationTableName string) string {
@@ -89,9 +119,6 @@ func createRecordWithTagsQuery(tableName string, associationTableName string) st
             LEFT JOIN %s ta ON lr.id = ta.record_id
             LEFT JOIN tags t ON ta.tag_id = t.id;`, tableName, associationTableName)
 }
-
-var (
-)
 
 func scanTagRow(row db.Scannable) (*types.Tag, error) {
 	tag := &types.Tag{}

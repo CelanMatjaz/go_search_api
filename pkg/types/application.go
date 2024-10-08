@@ -2,7 +2,7 @@ package types
 
 type ApplicationSection struct {
 	Common
-	AccountId int    `json:"accountId" db:"account_id"`
+	AccountId int    `json:"-" db:"account_id"`
 	Label     string `json:"label" db:"label"`
 	Text      string `json:"text" db:"text"`
 	WithTags
@@ -11,7 +11,7 @@ type ApplicationSection struct {
 
 type ApplicationPreset struct {
 	Common
-	AccountId int    `json:"accountId" db:"account_id"`
+	AccountId int    `json:"-" db:"account_id"`
 	Label     string `json:"label" db:"label"`
 	WithTags
 	Timestamps
@@ -20,6 +20,7 @@ type ApplicationPreset struct {
 type ApplicationPresetBody struct {
 	Label      string `json:"label" db:"label"`
 	SectionIds []int  `json:"sectionIds"`
+	TagIds     []int  `json:"tags"`
 }
 
 func (b ApplicationPresetBody) Verify() []string {
@@ -37,8 +38,9 @@ func (b ApplicationPresetBody) Verify() []string {
 }
 
 type ApplicationSectionBody struct {
-	Label string `json:"label" db:"label"`
-	Text  string `json:"text" db:"text"`
+	Label  string `json:"label" db:"label"`
+	Text   string `json:"text" db:"text"`
+	TagIds []int  `json:"tags"`
 }
 
 func (b ApplicationSectionBody) Verify() []string {

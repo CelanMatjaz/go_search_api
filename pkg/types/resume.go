@@ -2,7 +2,7 @@ package types
 
 type ResumeSection struct {
 	Common
-	AccountId int    `json:"accountId" db:"account_id"`
+	AccountId int    `json:"-" db:"account_id"`
 	Label     string `json:"label" db:"label"`
 	Text      string `json:"text" db:"text"`
 	WithTags
@@ -11,7 +11,7 @@ type ResumeSection struct {
 
 type ResumePreset struct {
 	Common
-	AccountId int    `json:"accountId" db:"account_id"`
+	AccountId int    `json:"-" db:"account_id"`
 	Label     string `json:"label" db:"label"`
 	WithTags
 	Timestamps
@@ -20,6 +20,7 @@ type ResumePreset struct {
 type ResumePresetBody struct {
 	Label      string `json:"label" db:"label"`
 	SectionIds []int  `json:"sectionIds"`
+	TagIds     []int  `json:"tags"`
 }
 
 func (b ResumePresetBody) Verify() []string {
@@ -39,6 +40,7 @@ func (b ResumePresetBody) Verify() []string {
 type ResumeSectionBody struct {
 	Label string `json:"label" db:"label"`
 	Text  string `json:"text" db:"text"`
+	TagIds     []int  `json:"tags"`
 }
 
 func (b ResumeSectionBody) Verify() []string {
