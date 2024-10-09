@@ -1,9 +1,11 @@
 package postgres
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"strings"
+	"text/template"
 
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
@@ -78,28 +80,55 @@ func (s *PostgresStore) GetResumeSectionTags(accountId int, resumeSectionId int)
 	)
 }
 
-func recordWithTagsQuery(recordTable string, mtmTable string) (string, string) {
-	left := fmt.Sprintf(`
-    WITH new_record AS (
-        INSERT INTO %s (account_id, label, text) 
-        VALUES ($1, $2, $3)
-        RETURNING *
-    ),
-    _ AS (
-        INSERT INTO %s (tag_id, record_id) 
-        VALUES 
-    `, recordTable, mtmTable)
+func recordWithTagsQuery(recordTable string, mtmTable string, fields ...string) (string, string) {
+	funcMap := template.FuncMap{
+		"join": strings.Join,
+		"joinIndices": func(fields []string) string {
+			indices := make([]string, len(fields))
+			for i := range indices {
+				indices[i] = fmt.Sprintf("$%d", i+1)
+			}
+			return strings.Join(indices, ",")
+		},
+	}
+
+	tmpl := `
+        WITH new_record AS (
+            INSERT INTO {{ .RecordTable }} ({{ join .Fields "," }}) 
+            VALUES ({{ joinIndices .Fields }})
+            RETURNING *
+        ),
+        _ AS (
+            INSERT INTO {{ .MtmTable }} (tag_id, record_id) 
+            VALUES`
+
+	var result bytes.Buffer
+
+	type Data struct {
+		RecordTable string
+		MtmTable    string
+		Fields      []string
+	}
+
+	t := template.Must(template.New("recordWithTagsQuery").Funcs(funcMap).Parse(tmpl))
+	err := t.Execute(&result, Data{
+		RecordTable: recordTable,
+		MtmTable:    mtmTable,
+		Fields:      fields,
+	})
+    if err != nil {
+        panic(err)
+    }
 
 	right := `) SELECT cs.* FROM new_record cs`
 
-	return left, right
+	return result.String(), right
 }
 
-func generateTagInsertString(tagIds []int) string {
+func generateTagInsertString(start int, tagIds []int) string {
 	sections := make([]string, len(tagIds))
-	start := 4 // start is based on above function args
 	for i := range tagIds {
-		sections[i] = fmt.Sprintf("($%d, (SELECT id FROM new_record))", i+start)
+		sections[i] = fmt.Sprintf("($%d, (SELECT id FROM new_record))", i+start+1)
 	}
 
 	return strings.Join(sections, ",")
@@ -111,13 +140,13 @@ func createRecordWithTagsQuery(tableName string, associationTableName string) st
                 SELECT *
                 FROM %s r
                 WHERE account_id = $1
-                ORDER BY r.id
                 OFFSET $2 LIMIT $3
             )
             SELECT lr.*, t.*
             FROM limited_records lr
             LEFT JOIN %s ta ON lr.id = ta.record_id
-            LEFT JOIN tags t ON ta.tag_id = t.id;`, tableName, associationTableName)
+            LEFT JOIN tags t ON ta.tag_id = t.id
+            ORDER BY lr.updated_at DESC;`, tableName, associationTableName)
 }
 
 func scanTagRow(row db.Scannable) (*types.Tag, error) {

@@ -18,7 +18,7 @@ func (s *PostgresStore) GetResumePreset(accountId int, presetId int) (*types.Res
 	return getRecord(s, scanResumePresetRow, "SELECT * FROM resume_presets WHERE account_id = $1 AND id = $2", accountId, presetId)
 }
 
-var createRPL, createRPR = recordWithTagsQuery("resume_presets", "mtm_tags_resume_presets")
+var createRPL, createRPR = recordWithTagsQuery("resume_presets", "mtm_tags_resume_presets", "account_id", "label")
 
 func (s *PostgresStore) CreateResumePreset(accountId int, preset types.ResumePresetBody) (*types.ResumePreset, error) {
 	args := make([]any, len(preset.TagIds)+3)
@@ -28,9 +28,9 @@ func (s *PostgresStore) CreateResumePreset(accountId int, preset types.ResumePre
 		args[i+2] = tagId
 	}
 
-	query := "INSERT INTO resume_presets (account_id, label, text) VALUES ($1, $2, $3) RETURNING *"
+	query := "INSERT INTO resume_presets (account_id, label, text) VALUES ($1, $2) RETURNING *"
 	if len(preset.TagIds) > 0 {
-		query = strings.Join([]string{createAPL, generateTagInsertString(preset.TagIds), createAPR}, "")
+		query = strings.Join([]string{createAPL, generateTagInsertString(2, preset.TagIds), createAPR}, "")
 	}
 
 	return WithTransactionScan(s, createRecord,

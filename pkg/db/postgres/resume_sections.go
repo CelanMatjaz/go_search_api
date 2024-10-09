@@ -18,7 +18,7 @@ func (s *PostgresStore) GetResumeSection(accountId int, sectionId int) (*types.R
 	return getRecord(s, scanResumeSectionRow, "SELECT * FROM resume_sections WHERE account_id = $1 AND id = $2", accountId, sectionId)
 }
 
-var createRSL, createRSR = recordWithTagsQuery("resume_sections", "mtm_tags_resume_sections")
+var createRSL, createRSR = recordWithTagsQuery("resume_sections", "mtm_tags_resume_sections", "account_id", "label", "text")
 
 func (s *PostgresStore) CreateResumeSection(accountId int, section types.ResumeSectionBody) (*types.ResumeSection, error) {
 	args := make([]any, len(section.TagIds)+3)
@@ -31,7 +31,7 @@ func (s *PostgresStore) CreateResumeSection(accountId int, section types.ResumeS
 
 	query := "INSERT INTO resume_sections (account_id, label, text) VALUES ($1, $2, $3) RETURNING *"
 	if len(section.TagIds) > 0 {
-		query = strings.Join([]string{createASL, generateTagInsertString(section.TagIds), createASR}, "")
+		query = strings.Join([]string{createASL, generateTagInsertString(3, section.TagIds), createASR}, "")
 	}
 
 	return WithTransactionScan(s, createRecord,

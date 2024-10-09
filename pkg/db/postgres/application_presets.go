@@ -18,19 +18,20 @@ func (s *PostgresStore) GetApplicationPreset(accountId int, presetId int) (*type
 	return getRecord(s, scanApplicationPresetRow, "SELECT * FROM application_presets WHERE account_id = $1 AND id = $2", accountId, presetId)
 }
 
-var createAPL, createAPR = recordWithTagsQuery("application_presets", "mtm_tags_application_presets")
+var createAPL, createAPR = recordWithTagsQuery("application_presets", "mtm_tags_application_presets", "account_id", "label")
 
 func (s *PostgresStore) CreateApplicationPreset(accountId int, preset types.ApplicationPresetBody) (*types.ApplicationPreset, error) {
-	args := make([]any, len(preset.TagIds)+3)
+	start := 2
+	args := make([]any, len(preset.TagIds)+start)
 	args[0] = accountId
 	args[1] = preset.Label
 	for i, tagId := range preset.TagIds {
-		args[i+2] = tagId
+		args[i+start] = tagId
 	}
 
-	query := "INSERT INTO application_presets (account_id, label, text) VALUES ($1, $2, $3) RETURNING *"
+	query := "INSERT INTO application_presets (account_id, label) VALUES ($1, $2) RETURNING *"
 	if len(preset.TagIds) > 0 {
-		query = strings.Join([]string{createAPL, generateTagInsertString(preset.TagIds), createAPR}, "")
+		query = strings.Join([]string{createAPL, generateTagInsertString(2,preset.TagIds), createAPR}, "")
 	}
 
 	return WithTransactionScan(s, createRecord,

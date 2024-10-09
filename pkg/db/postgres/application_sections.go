@@ -18,7 +18,7 @@ func (s *PostgresStore) GetApplicationSection(accountId int, sectionId int) (*ty
 	return getRecord(s, scanApplicationSectionRow, "SELECT * FROM application_sections WHERE account_id = $1 AND id = $2", accountId, sectionId)
 }
 
-var createASL, createASR = recordWithTagsQuery("application_sections", "mtm_tags_application_sections")
+var createASL, createASR = recordWithTagsQuery("application_sections", "mtm_tags_application_sections", "account_id", "label", "text")
 
 func (s *PostgresStore) CreateApplicationSection(accountId int, section types.ApplicationSectionBody) (*types.ApplicationSection, error) {
 	args := make([]any, len(section.TagIds)+3)
@@ -31,7 +31,7 @@ func (s *PostgresStore) CreateApplicationSection(accountId int, section types.Ap
 
 	query := "INSERT INTO application_sections (account_id, label, text) VALUES ($1, $2, $3) RETURNING *"
 	if len(section.TagIds) > 0 {
-		query = strings.Join([]string{createASL, generateTagInsertString(section.TagIds), createASR}, "")
+		query = strings.Join([]string{createASL, generateTagInsertString(3,section.TagIds), createASR}, "")
 	}
 
 	return WithTransactionScan(s, createRecord,
