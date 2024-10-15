@@ -16,8 +16,7 @@ func CreateHandler(h HandlerFunc) http.HandlerFunc {
 			if error, ok := err.(types.ApiError); ok {
 				utils.SendErrors(w, error.Errors, error.StatusCode)
 			} else {
-                println("Internal server error:", error.Error())
-				log.Println("Internal server error: ", error.Error())
+				log.Println("Internal server error: ", err.Error())
 				utils.SendInternalServerError(w)
 			}
 			return

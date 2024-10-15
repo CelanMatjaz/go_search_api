@@ -16,12 +16,12 @@ func (b OAuthLoginBody) Verify() []string {
 type OAuthClient struct {
 	Common
 	Name                string `json:"-" db:"name"`
-	ClientId            string `json:"-" db:"clientId"`
-	ClientSecret        string `json:"-" db:"clientSecret"`
+	ClientId            string `json:"-" db:"client_id"`
+	ClientSecret        string `json:"-" db:"client_secret"`
 	Scopes              string `json:"-" db:"scopes"`
-	CodeEndpoint        string `json:"-" db:"codeEndpoint"`
-	TokenEndpoint       string `json:"-" db:"tokenEndpoint"`
-	AccountDataEndpoint string `json:"-" db:"accountDataEndpoint"`
+	CodeEndpoint        string `json:"-" db:"code_endpoint"`
+	TokenEndpoint       string `json:"-" db:"token_endpoint"`
+	AccountDataEndpoint string `json:"-" db:"account_data_endpoint"`
 }
 
 type TokenResponse struct {

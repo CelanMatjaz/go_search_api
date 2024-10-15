@@ -7,8 +7,8 @@ import (
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
 )
 
-func getRecords[T any](s *PostgresStore, scan func(db.Scannable) (*T, error), query string, args ...any) ([]T, error) {
-	rows, err := s.Db.Query(query, args...)
+func getRecords[T any](db *sql.DB, scan func(db.Scannable) (T, error), query string, args ...any) ([]T, error) {
+	rows, err := db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -19,47 +19,34 @@ func getRecords[T any](s *PostgresStore, scan func(db.Scannable) (*T, error), qu
 		if err != nil {
 			return nil, err
 		}
-		records = append(records, *record)
+		records = append(records, record)
 	}
 
 	return records, nil
 }
 
-func getRecord[T any](s *PostgresStore, scan func(db.Scannable) (*T, error), query string, args ...any) (*T, error) {
-	row := s.Db.QueryRow(query, args...)
-	record, err := scan(row)
-	if err != nil {
-		return nil, err
-	}
-
-	return record, nil
-}
-
-func createRecord[T any](tx *sql.Tx, scan func(db.Scannable) (*T, error), query string, args ...any) (*T, error) {
+func getRecord[T any](tx *sql.Tx, scan func(db.Scannable) (T, error), query string, args ...any) (T, error) {
+	var temp T
 	row := tx.QueryRow(query, args...)
 	record, err := scan(row)
-
 	if err != nil {
-		return nil, err
+		return temp, err
 	}
 
 	return record, nil
 }
 
-func createRecordWithTags[T any](tx *sql.Tx, scan func(db.Scannable) (*T, error), query string, args ...any) (*T, error) {
-	row := tx.QueryRow(query, args...)
-	record, err := scan(row)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return record, nil
+func createRecord[T any](tx *sql.Tx, scan func(db.Scannable) (T, error), query string, args ...any) (T, error) {
+	return getRecord(tx, scan, query, args...)
 }
 
-func updateRecord[T any](tx *sql.Tx, scan func(db.Scannable) (*T, error), query string, args ...any) (*T, error) {
-	return createRecord(tx, scan, query, args...)
-}
+// func createRecordWithTags[T any](tx *sql.Tx, scan func(db.Scannable) (T, error), query string, args ...any) (T, error) {
+// 	return getRecord(tx, scan, query, args...)
+// }
+//
+// func updateRecord[T any](tx *sql.Tx, scan func(db.Scannable) (T, error), query string, args ...any) (T, error) {
+// 	return createRecord(tx, scan, query, args...)
+// }
 
 func deleteRecord(tx *sql.Tx, query string, args ...any) error {
 	_, err := tx.Exec(query, args...)
@@ -72,16 +59,16 @@ func deleteRecord(tx *sql.Tx, query string, args ...any) error {
 
 type CanSetTags interface {
 	GetId() int
-	AppendTag(newTag *types.Tag)
+	AppendTag(newTag types.Tag)
 }
 
 func genericGetRecordsWithTags[T CanSetTags](
-	s *PostgresStore,
-	scan func(db.Scannable) (T, *types.Tag, error),
+	db *sql.DB,
+	scan func(db.Scannable) (T, types.Tag, error),
 	query string, accountId int,
 	pagination types.PaginationParams,
 ) ([]T, error) {
-	rows, err := s.Db.Query(query, accountId, pagination.GetOffset(), pagination.Count)
+	rows, err := db.Query(query, accountId, pagination.GetOffset(), pagination.Count)
 	if err != nil {
 		return nil, err
 	}
@@ -103,9 +90,7 @@ func genericGetRecordsWithTags[T CanSetTags](
 			recordArr = append(recordArr, scannedRecord)
 		}
 
-		if tag.Id.Valid {
-			(recordArr[recordIndex]).AppendTag(tag)
-		}
+		recordArr[recordIndex].AppendTag(tag)
 	}
 
 	return recordArr, nil

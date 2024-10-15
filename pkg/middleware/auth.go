@@ -74,12 +74,8 @@ func verifyRefreshToken(r *http.Request, s db.AuthStore) (int, int, bool) {
 		return 0, 0, false
 	}
 
-	account, err := s.GetAccountById(accountId)
-	if err != nil {
-		return 0, 0, false
-	}
-
-	if account.TokenVersion != version {
+	account, exists, err := s.GetAccountById(accountId)
+	if err != nil || !exists || (account.TokenVersion != version) {
 		return 0, 0, false
 	}
 

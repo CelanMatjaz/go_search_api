@@ -4,22 +4,24 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
 )
 
-func (s *PostgresStore) GetAccountById(id int) (*types.Account, error) {
+var accountScanFunc = createScanFunc[types.Account]()
+
+func (s *PostgresStore) GetAccountById(id int) (types.Account, bool, error) {
 	return s.getAccount("WHERE accounts.id = $1", id)
 }
 
-func (s *PostgresStore) GetAccountByEmail(email string) (*types.Account, error) {
+func (s *PostgresStore) GetAccountByEmail(email string) (types.Account, bool, error) {
 	return s.getAccount("WHERE accounts.email = $1", email)
 }
 
-func (s *PostgresStore) CreateAccount(account types.Account) (*types.Account, error) {
+func (s *PostgresStore) CreateAccount(account types.Account) (types.Account, error) {
+	var acc types.Account
 	transaction, err := s.Db.Begin()
 	if err != nil {
-		return nil, err
+		return acc, err
 	}
 	defer transaction.Rollback()
 
@@ -40,18 +42,18 @@ func (s *PostgresStore) CreateAccount(account types.Account) (*types.Account, er
 	newAccount := &types.Account{}
 	err = row.Scan(&account.Id)
 	if err != nil {
-		return nil, err
+		return acc, err
 	}
 
 	err = transaction.Commit()
 	if err != nil {
-		return nil, err
+		return acc, err
 	}
 
-	return newAccount, nil
+	return *newAccount, nil
 }
 
-func (s *PostgresStore) CreateAccountWithOAuth(account types.Account, tokenResponse types.TokenResponse, clientId int) (*types.Account, error) {
+func (s *PostgresStore) CreateAccountWithOAuth(account types.Account, tokenResponse types.TokenResponse, clientId int) (types.Account, error) {
 	row := s.Db.QueryRow(`
         INSERT INTO accounts (display_name, email) 
         VALUES ($1, $2)
@@ -66,7 +68,7 @@ func (s *PostgresStore) CreateAccountWithOAuth(account types.Account, tokenRespo
 		account.DisplayName,
 		account.Email,
 	)
-	acc, err := scanAccountRow(row)
+	acc, err := accountScanFunc(row)
 	if err != nil {
 		return acc, err
 	}
@@ -109,9 +111,9 @@ func (s *PostgresStore) UpdateAccountToOAuth(account types.Account, tokenRespons
 	return s.createAccountOAuthData(account.Id, clientId, tokenResponse)
 }
 
-func (s *PostgresStore) GetOAuthClientByName(name string) (*types.OAuthClient, error) {
+func (s *PostgresStore) GetOAuthClientByName(name string) (types.OAuthClient, bool, error) {
 	row := s.Db.QueryRow("SELECT * FROM oauth_clients WHERE name = $1", name)
-	client := &types.OAuthClient{}
+	client := types.OAuthClient{}
 	err := row.Scan(
 		&client.Id,
 		&client.Name,
@@ -123,14 +125,15 @@ func (s *PostgresStore) GetOAuthClientByName(name string) (*types.OAuthClient, e
 		&client.AccountDataEndpoint,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil
+		return client, false, nil
 	}
 
-	return client, err
+	return client, true, err
 }
 
-func (s *PostgresStore) getAccount(whereClause string, value any) (*types.Account, error) {
-	row := s.Db.QueryRow(`
+func (s *PostgresStore) getAccount(whereClause string, value any) (types.Account, bool, error) {
+	var account types.Account
+	rows, err := s.Db.Query(`
         SELECT
             accounts.id, 
             accounts.display_name,
@@ -140,32 +143,15 @@ func (s *PostgresStore) getAccount(whereClause string, value any) (*types.Accoun
             accounts.created_at,
             accounts.updated_at
         FROM accounts
-        LEFT JOIN password_hashes ph ON accounts.id = ph.account_id `+whereClause,
-		value)
-
-	return scanAccountRow(row)
-}
-
-func scanAccountRow(row db.Scannable) (*types.Account, error) {
-	account := &types.Account{}
-	err := row.Scan(
-		&account.Id,
-		&account.DisplayName,
-		&account.Email,
-		&account.PasswordHash,
-		&account.TokenVersion,
-		&account.CreatedAt,
-		&account.UpdatedAt,
-	)
-
+        LEFT JOIN password_hashes ph ON accounts.id = ph.account_id `+whereClause, value)
 	if err != nil {
-		switch err {
-		case sql.ErrNoRows:
-			return nil, nil
-		default:
-			return nil, err
-		}
+		return account, false, err
 	}
 
-	return account, nil
+	if rows.Next() {
+		account, err := accountScanFunc(rows)
+		return account, true, err
+	} else {
+		return account, false, err
+	}
 }

@@ -7,12 +7,12 @@ type Common struct {
 }
 
 type WithTags struct {
-	Tags []*Tag `json:"tags,omitempty"`
+	Tags []Tag `json:"tags,omitempty"`
 }
 
 type Timestamps struct {
-	CreatedAt time.Time `db:"createdAt" json:"createdAt"`
-	UpdatedAt time.Time `db:"updatedAt" json:"updatedAt"`
+	CreatedAt time.Time `db:"created_at" json:"createdAt"`
+	UpdatedAt time.Time `db:"updated_at" json:"updatedAt"`
 }
 
 type Verifiable interface {
@@ -23,9 +23,9 @@ func (c Common) GetId() int {
 	return c.Id
 }
 
-func (wt* WithTags) AppendTag(newTag *Tag) {
+func (wt WithTags) AppendTag(newTag Tag) {
 	if wt.Tags == nil {
-		wt.Tags = make([]*Tag, 0)
+		wt.Tags = make([]Tag, 0)
 	}
 	wt.Tags = append(wt.Tags, newTag)
 }

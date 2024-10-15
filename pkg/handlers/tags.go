@@ -40,10 +40,10 @@ func sendTags(w http.ResponseWriter, data []types.Tag) error {
 	}{Tags: data}, http.StatusOK)
 }
 
-func sendTag(w http.ResponseWriter, data *types.Tag) error {
+func sendTag(w http.ResponseWriter, data types.Tag) error {
 	return utils.SendJson(w, struct {
 		Tag types.Tag `json:"tag"`
-	}{Tag: *data}, http.StatusOK)
+	}{Tag: data}, http.StatusOK)
 }
 
 func createGetManyTagsFromTableHandler(

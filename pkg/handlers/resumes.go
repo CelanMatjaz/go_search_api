@@ -37,26 +37,26 @@ func (h *ResumeHandler) AddRoutes(r chi.Router) {
 	})
 }
 
-func sendResumePresets(w http.ResponseWriter, data []*types.ResumePreset) error {
+func sendResumePresets(w http.ResponseWriter, data []types.ResumePreset) error {
 	return utils.SendJson(w, struct {
-		Presets []*types.ResumePreset `json:"resumePresets"`
+		Presets []types.ResumePreset `json:"resumePresets"`
 	}{Presets: data}, http.StatusOK)
 }
 
-func sendResumePreset(w http.ResponseWriter, data *types.ResumePreset) error {
+func sendResumePreset(w http.ResponseWriter, data types.ResumePreset) error {
 	return utils.SendJson(w, struct {
 		Preset types.ResumePreset `json:"resumePreset"`
-	}{Preset: *data}, http.StatusOK)
+	}{Preset: data}, http.StatusOK)
 }
 
-func sendResumeSections(w http.ResponseWriter, data []*types.ResumeSection) error {
+func sendResumeSections(w http.ResponseWriter, data []types.ResumeSection) error {
 	return utils.SendJson(w, struct {
-		Sections []*types.ResumeSection `json:"resumeSections"`
+		Sections []types.ResumeSection `json:"resumeSections"`
 	}{Sections: data}, http.StatusOK)
 }
 
-func sendResumeSection(w http.ResponseWriter, data *types.ResumeSection) error {
+func sendResumeSection(w http.ResponseWriter, data types.ResumeSection) error {
 	return utils.SendJson(w, struct {
 		Section types.ResumeSection `json:"resumeSection"`
-	}{Section: *data}, http.StatusOK)
+	}{Section: data}, http.StatusOK)
 }

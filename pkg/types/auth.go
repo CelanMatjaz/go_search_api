@@ -27,9 +27,9 @@ type LoginBody struct {
 	Password string `json:"password"`
 }
 
-func CreateNewAccountData(displayName string, email string, password string) (*Account, error) {
+func CreateNewAccountData(displayName string, email string, password string) (Account, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	return &Account{
+	return Account{
 		DisplayName:  displayName,
 		Email:        email,
 		PasswordHash: sql.NullString{String: string(hash), Valid: true},

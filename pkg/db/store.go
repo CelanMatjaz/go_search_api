@@ -10,19 +10,19 @@ type Store interface {
 }
 
 type AuthStore interface {
-	GetAccountById(id int) (*types.Account, error)
-	GetAccountByEmail(email string) (*types.Account, error)
-	CreateAccount(account types.Account) (*types.Account, error)
-	CreateAccountWithOAuth(account types.Account, tokenResponse types.TokenResponse, clientId int) (*types.Account, error)
+	GetAccountById(id int) (types.Account, bool, error)
+	GetAccountByEmail(email string) (types.Account, bool, error)
+	CreateAccount(account types.Account) (types.Account, error)
+	CreateAccountWithOAuth(account types.Account, tokenResponse types.TokenResponse, clientId int) (types.Account, error)
 	UpdateAccountToOAuth(account types.Account, tokenResponse types.TokenResponse, clientId int) error
-	GetOAuthClientByName(name string) (*types.OAuthClient, error)
+	GetOAuthClientByName(name string) (types.OAuthClient, bool, error)
 }
 
 type TagStore interface {
 	GetTags(accountId int) ([]types.Tag, error)
-	GetTag(accountId int, tagId int) (*types.Tag, error)
-	CreateTag(accountId int, tag types.TagBody) (*types.Tag, error)
-	UpdateTag(accountId int, tagId int, tag types.TagBody) (*types.Tag, error)
+	GetTag(accountId int, tagId int) (types.Tag, error)
+	CreateTag(accountId int, tag types.TagBody) (types.Tag, error)
+	UpdateTag(accountId int, tagId int, tag types.TagBody) (types.Tag, error)
 	DeleteTag(accountId int, tagId int) error
 
 	GetApplicationPresetTags(accountId int, applicationId int) ([]types.Tag, error)
@@ -32,29 +32,29 @@ type TagStore interface {
 }
 
 type ApplicationStore interface {
-	GetApplicationPresets(accountId int, pagination types.PaginationParams) ([]*types.ApplicationPreset, error)
-	GetApplicationPreset(accountId int, presetId int) (*types.ApplicationPreset, error)
-	CreateApplicationPreset(accountId int, presetId types.ApplicationPresetBody) (*types.ApplicationPreset, error)
-	UpdateApplicationPreset(accountId int, presetId int, preset types.ApplicationPresetBody) (*types.ApplicationPreset, error)
-	DeleteApplicationPreset(accountId int, presetId int) error
+	GetApplicationPresets(accountId int, pagination types.PaginationParams) ([]types.ApplicationPreset, error)
+	GetApplicationPreset(accountId int, id int) (types.ApplicationPreset, error)
+	CreateApplicationPreset(accountId int, body types.ApplicationPresetBody) (types.ApplicationPreset, error)
+	UpdateApplicationPreset(accountId int, id int, body types.ApplicationPresetBody) (types.ApplicationPreset, error)
+	DeleteApplicationPreset(accountId int, id int) error
 
-	GetApplicationSections(accountId int, pagination types.PaginationParams) ([]*types.ApplicationSection, error)
-	GetApplicationSection(accountId int, presetId int) (*types.ApplicationSection, error)
-	CreateApplicationSection(accountId int, presetId types.ApplicationSectionBody) (*types.ApplicationSection, error)
-	UpdateApplicationSection(accountId int, presetId int, preset types.ApplicationSectionBody) (*types.ApplicationSection, error)
-	DeleteApplicationSection(accountId int, presetId int) error
+	GetApplicationSections(accountId int, pagination types.PaginationParams) ([]types.ApplicationSection, error)
+	GetApplicationSection(accountId int, id int) (types.ApplicationSection, error)
+	CreateApplicationSection(accountId int, body types.ApplicationSectionBody) (types.ApplicationSection, error)
+	UpdateApplicationSection(accountId int, id int, body types.ApplicationSectionBody) (types.ApplicationSection, error)
+	DeleteApplicationSection(accountId int, id int) error
 }
 
 type ResumeStore interface {
-	GetResumePresets(accountId int, pagination types.PaginationParams) ([]*types.ResumePreset, error)
-	GetResumePreset(accountId int, presetId int) (*types.ResumePreset, error)
-	CreateResumePreset(accountId int, presetId types.ResumePresetBody) (*types.ResumePreset, error)
-	UpdateResumePreset(accountId int, presetId int, preset types.ResumePresetBody) (*types.ResumePreset, error)
-	DeleteResumePreset(accountId int, presetId int) error
+	GetResumePresets(accountId int, pagination types.PaginationParams) ([]types.ResumePreset, error)
+	GetResumePreset(accountId int, id int) (types.ResumePreset, error)
+	CreateResumePreset(accountId int, id types.ResumePresetBody) (types.ResumePreset, error)
+	UpdateResumePreset(accountId int, id int, body types.ResumePresetBody) (types.ResumePreset, error)
+	DeleteResumePreset(accountId int, id int) error
 
-	GetResumeSections(accountId int, pagination types.PaginationParams) ([]*types.ResumeSection, error)
-	GetResumeSection(accountId int, presetId int) (*types.ResumeSection, error)
-	CreateResumeSection(accountId int, presetId types.ResumeSectionBody) (*types.ResumeSection, error)
-	UpdateResumeSection(accountId int, presetId int, preset types.ResumeSectionBody) (*types.ResumeSection, error)
-	DeleteResumeSection(accountId int, presetId int) error
+	GetResumeSections(accountId int, pagination types.PaginationParams) ([]types.ResumeSection, error)
+	GetResumeSection(accountId int, id int) (types.ResumeSection, error)
+	CreateResumeSection(accountId int, body types.ResumeSectionBody) (types.ResumeSection, error)
+	UpdateResumeSection(accountId int, id int, body types.ResumeSectionBody) (types.ResumeSection, error)
+	DeleteResumeSection(accountId int, id int) error
 }

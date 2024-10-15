@@ -38,8 +38,8 @@ func (h *AuthHandler) handleRegister(w http.ResponseWriter, r *http.Request) err
 		return err
 	}
 
-	existingAccount, err := h.store.GetAccountByEmail(body.Email)
-	if existingAccount != nil {
+	_, exists, err := h.store.GetAccountByEmail(body.Email)
+	if exists {
 		return types.AccountAlreadyExists
 	}
 
@@ -48,7 +48,7 @@ func (h *AuthHandler) handleRegister(w http.ResponseWriter, r *http.Request) err
 		return err
 	}
 
-	_, err = h.store.CreateAccount(*newAccountData)
+	_, err = h.store.CreateAccount(newAccountData)
 	if err != nil {
 		return err
 	}
@@ -62,11 +62,11 @@ func (h *AuthHandler) handleLogin(w http.ResponseWriter, r *http.Request) error 
 		return types.UnparsableJsonBody
 	}
 
-	existingAccount, err := h.store.GetAccountByEmail(body.Email)
+	existingAccount, exists, err := h.store.GetAccountByEmail(body.Email)
 	if err != nil {
 		return err
 	}
-	if existingAccount == nil {
+	if !exists {
 		return types.AccountDoesNotExist
 	}
 
@@ -86,7 +86,7 @@ func (h *AuthHandler) handleLogin(w http.ResponseWriter, r *http.Request) error 
 
 	return utils.SendJson(w, struct {
 		Account types.Account `json:"accountData"`
-	}{Account: *existingAccount}, http.StatusOK)
+	}{Account: existingAccount}, http.StatusOK)
 }
 
 func (h *AuthHandler) handleLogout(w http.ResponseWriter, _ *http.Request) error {
@@ -100,17 +100,17 @@ func (h *AuthHandler) handleAuthCheck(w http.ResponseWriter, r *http.Request) er
 		return types.Unauthenticated
 	}
 
-	existingAccount, err := h.store.GetAccountById(accountId)
+	existingAccount, exists, err := h.store.GetAccountById(accountId)
 	if err != nil {
 		return err
 	}
-	if existingAccount == nil {
+	if !exists {
 		return types.AccountDoesNotExist
 	}
 
 	return utils.SendJson(w, struct {
 		Account types.Account `json:"accountData"`
-	}{Account: *existingAccount}, http.StatusOK)
+	}{Account: existingAccount}, http.StatusOK)
 }
 
 func (h *AuthHandler) handleOAuth(w http.ResponseWriter, r *http.Request) error {
@@ -119,15 +119,15 @@ func (h *AuthHandler) handleOAuth(w http.ResponseWriter, r *http.Request) error 
 		return types.UnparsableJsonBody
 	}
 
-	oauthClient, err := h.store.GetOAuthClientByName(body.Provider)
+	oauthClient, exists, err := h.store.GetOAuthClientByName(body.Provider)
 	if err != nil {
 		return err
 	}
-	if oauthClient == nil {
+	if !exists {
 		return types.UnknownOAuthProvider
 	}
 
-	tokenResponse, statusCode, err := utils.FetchToken(*oauthClient, body.Code)
+	tokenResponse, statusCode, err := utils.FetchToken(oauthClient, body.Code)
 	if err != nil {
 		return err
 	} else if statusCode != 200 {
@@ -143,12 +143,13 @@ func (h *AuthHandler) handleOAuth(w http.ResponseWriter, r *http.Request) error 
 		return types.UnverifiedOAuthEmail
 	}
 
-	account, err := h.store.GetAccountByEmail(infoResponse.Email)
+	account, exists, err := h.store.GetAccountByEmail(infoResponse.Email)
 	if err != nil {
 		return err
 	}
 
-	if account == nil {
+
+	if !exists {
 		account, err = h.store.CreateAccountWithOAuth(types.Account{
 			DisplayName: infoResponse.Name,
 			Email:       infoResponse.Email,
@@ -162,5 +163,5 @@ func (h *AuthHandler) handleOAuth(w http.ResponseWriter, r *http.Request) error 
 
 	return utils.SendJson(w, struct {
 		Account types.Account `json:"accountData"`
-	}{Account: *account}, http.StatusOK)
+	}{Account: account}, http.StatusOK)
 }

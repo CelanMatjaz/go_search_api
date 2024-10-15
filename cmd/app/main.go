@@ -9,8 +9,8 @@ import (
 )
 
 func main() {
-    connectionString := os.Getenv("CONNECTION_STRING")
-    port := os.Getenv("PORT")
+	connectionString := os.Getenv("CONNECTION_STRING")
+	port := os.Getenv("PORT")
 
 	store := postgres.CreatePostgresStore(connectionString)
 	server := api.CreateServer(port, store)
