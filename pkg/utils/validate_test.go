@@ -154,6 +154,7 @@ func TestValidate(t *testing.T) {
 	type Mixed struct {
 		email    string `validate:"required,email,min:2,max:100"`
 		password string `validate:"required,min:8,max:10"`
+		MinMaxStruct
 	}
 
 	type ValidateTestCase struct {
@@ -172,7 +173,8 @@ func TestValidate(t *testing.T) {
 		{errors: Validate(MinMaxStruct{field1: "AAAA", field2: "AAAA"}), shouldFail: false},
 		{errors: Validate(MinMaxStruct{field1: "AA", field2: "AA"}), shouldFail: true},
 		{errors: Validate(Mixed{email: "AA", password: "AAAAAAAAAAAAA"}), shouldFail: true},
-		{errors: Validate(Mixed{email: "ok@email.com", password: "AAAAAAAa1!"}), shouldFail: false},
+		{errors: Validate(Mixed{email: "ok@email.com", password: "AAAAAAAa1!"}), shouldFail: true},
+		{errors: Validate(Mixed{email: "ok@email.com", password: "AAAAAAAa1!", MinMaxStruct: MinMaxStruct{field1: "AAAA", field2: "AAAA"}}), shouldFail: false},
 	}
 
 	for i, tc := range testCases {

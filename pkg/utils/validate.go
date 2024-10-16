@@ -17,7 +17,7 @@ func Validate(value any) []string {
 		fieldType := v.Type().Field(i)
 
 		if field.Kind() == reflect.Struct {
-			errors = append(errors, Validate(field)...)
+			errors = append(errors, Validate(field.Interface())...)
 			continue
 		}
 
