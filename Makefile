@@ -1,8 +1,8 @@
 build: 
-	go build -o ./bin/api ./cmd/main.go
+	go build -o bin/api cmd/app/main.go
 
 run: build
-	./bin/api
+	bin/api
 
 dev:
 	air -c .air.toml
@@ -15,3 +15,9 @@ down:
 
 reset:
 	go run cmd/migrate/main.go reset
+
+test:
+	go test ./...
+
+test-verbose:
+	go test ./... -v
