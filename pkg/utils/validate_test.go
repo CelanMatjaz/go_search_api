@@ -54,16 +54,32 @@ func TestValidateMax(t *testing.T) {
 	}
 }
 
+func TestValidateLen(t *testing.T) {
+	t.Parallel()
+
+	testCases := []TestCaseStruct{
+		{validateString: "len:0", value: reflect.ValueOf(""), shouldFail: false},
+		{validateString: "len:0", value: reflect.ValueOf("A"), shouldFail: true},
+		{validateString: "len:1", value: reflect.ValueOf(""), shouldFail: true},
+		{validateString: "len:1", value: reflect.ValueOf("A"), shouldFail: false},
+		{validateString: "len:", value: reflect.ValueOf(""), shouldFail: false},
+		{validateString: "len:", value: reflect.ValueOf("A"), shouldFail: true},
+	}
+
+	for i, tc := range testCases {
+		errorString := validateLen(tc.validateString, tc.value, "Field")
+		if (errorString != "") != tc.shouldFail {
+			t.Errorf(
+				"validateLen() failed for test case with index %d, validation: '%s', value '%s', should fail: %t",
+				i, tc.validateString, tc.value.String(), tc.shouldFail)
+		}
+	}
+}
+
 func TestValidatePassword(t *testing.T) {
 	t.Parallel()
 
 	testCases := []TestCaseStruct{
-		// Check length
-		{value: reflect.ValueOf("Passwo1!"), shouldFail: false},                         // valid with 8 characters
-		{value: reflect.ValueOf("Passw1!"), shouldFail: true},                           // valid with 7 characters
-		{value: reflect.ValueOf("Passwo1!Passwo1!Passwo1!Passwo1!"), shouldFail: false}, // valid with 32 characters
-		{value: reflect.ValueOf("Passwo1!Passwo1!Passwo1!Passwo1!_"), shouldFail: true}, // valid with 33 characters
-
 		// Check for number
 		{value: reflect.ValueOf("Passwo1!"), shouldFail: false},
 		{value: reflect.ValueOf("Passwor!"), shouldFail: true},

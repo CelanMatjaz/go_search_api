@@ -45,6 +45,10 @@ func validateField(val reflect.Value, fieldName string, tag string) []string {
 			if errorString := validateMax(validation, val, fieldName); errorString != "" {
 				errors = append(errors, errorString)
 			}
+		} else if strings.HasPrefix(validation, "len:") {
+			if errorString := validateMax(validation, val, fieldName); errorString != "" {
+				errors = append(errors, errorString)
+			}
 		} else if validation == "required" {
 			if errorString := validateRequired(val, fieldName); errorString != "" {
 				errors = append(errors, errorString)
@@ -75,6 +79,14 @@ func validateMax(validate string, val reflect.Value, field string) string {
 	max, _ := strconv.Atoi(strings.TrimPrefix(validate, "max:"))
 	if len(val.String()) > max {
 		return fmt.Sprintf("Field '%s' must be at most %d characters long", field, max)
+	}
+	return ""
+}
+
+func validateLen(validate string, val reflect.Value, field string) string {
+	length, _ := strconv.Atoi(strings.TrimPrefix(validate, "len:"))
+	if len(val.String()) != length {
+		return fmt.Sprintf("Field '%s' must be exactly %d characters long", field, length)
 	}
 	return ""
 }
