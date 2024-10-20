@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -20,7 +21,8 @@ func main() {
 		log.Fatal("Provide a subcommand, either of 'up', 'down' or 'reset'")
 	}
 
-	godotenv.Load("dev.env")
+	envFile := flag.String("env", "dev.env", "env file")
+	godotenv.Load(*envFile)
 	connectionString := os.Getenv("CONNECTION_STRING")
 
 	db, err := sql.Open("postgres", connectionString)
