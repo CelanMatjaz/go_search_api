@@ -17,7 +17,10 @@ reset:
 	go run cmd/migrate/main.go reset
 
 test:
-	go test ./...
+	go test ./pkg/...
 
 test-verbose:
-	go test ./... -v
+	go test ./pkg/... -v
+
+format:
+ 	go fmt ./pkg/...
