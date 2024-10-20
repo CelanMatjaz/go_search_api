@@ -60,6 +60,7 @@ func deleteRecord(tx *sql.Tx, query string, args ...any) error {
 type CanSetTags interface {
 	GetId() int
 	AppendTag(newTag types.Tag)
+	GetTagCount() int
 }
 
 func genericGetRecordsWithTags[T CanSetTags](
@@ -76,7 +77,9 @@ func genericGetRecordsWithTags[T CanSetTags](
 	recordSet := make(map[int]int)
 	recordArr := make([]T, 0)
 
+	i := 0
 	for rows.Next() {
+		i++
 		scannedRecord, tag, err := scan(rows)
 
 		if err != nil {
@@ -90,7 +93,9 @@ func genericGetRecordsWithTags[T CanSetTags](
 			recordArr = append(recordArr, scannedRecord)
 		}
 
-		recordArr[recordIndex].AppendTag(tag)
+		if tag.Id.Valid {
+			recordArr[recordIndex].AppendTag(tag)
+		}
 	}
 
 	return recordArr, nil

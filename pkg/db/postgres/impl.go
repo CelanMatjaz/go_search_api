@@ -10,12 +10,12 @@ func (s *PostgresStore) GetApplicationPreset(accountId int, id int) (types.Appli
 	return s.ApplicationPresets.GetSingle(accountId, id)
 }
 
-func (s *PostgresStore) CreateApplicationPreset(accountId int, body types.ApplicationPresetBody) (types.ApplicationPreset, error) {
-	return s.ApplicationPresets.CreateSingle(accountId, body)
+func (s *PostgresStore) CreateApplicationPreset(body types.ApplicationPreset) (types.ApplicationPreset, error) {
+	return s.ApplicationPresets.CreateSingle(body)
 }
 
-func (s *PostgresStore) UpdateApplicationPreset(accountId int, id int, body types.ApplicationPresetBody) (types.ApplicationPreset, error) {
-	return s.ApplicationPresets.UpdateSingle(accountId, id, body)
+func (s *PostgresStore) UpdateApplicationPreset(body types.ApplicationPreset) (types.ApplicationPreset, error) {
+	return s.ApplicationPresets.UpdateSingle(body)
 }
 
 func (s *PostgresStore) DeleteApplicationPreset(accountId int, id int) error {
@@ -30,12 +30,12 @@ func (s *PostgresStore) GetApplicationSection(accountId int, id int) (types.Appl
 	return s.ApplicationSections.GetSingle(accountId, id)
 }
 
-func (s *PostgresStore) CreateApplicationSection(accountId int, body types.ApplicationSectionBody) (types.ApplicationSection, error) {
-	return s.ApplicationSections.CreateSingle(accountId, body)
+func (s *PostgresStore) CreateApplicationSection(body types.ApplicationSection) (types.ApplicationSection, error) {
+	return s.ApplicationSections.CreateSingle(body)
 }
 
-func (s *PostgresStore) UpdateApplicationSection(accountId int, id int, body types.ApplicationSectionBody) (types.ApplicationSection, error) {
-	return s.ApplicationSections.UpdateSingle(accountId, id, body)
+func (s *PostgresStore) UpdateApplicationSection(body types.ApplicationSection) (types.ApplicationSection, error) {
+	return s.ApplicationSections.UpdateSingle(body)
 }
 
 func (s *PostgresStore) DeleteApplicationSection(accountId int, id int) error {
@@ -50,12 +50,12 @@ func (s *PostgresStore) GetResumePreset(accountId int, id int) (types.ResumePres
 	return s.ResumePresets.GetSingle(accountId, id)
 }
 
-func (s *PostgresStore) CreateResumePreset(accountId int, body types.ResumePresetBody) (types.ResumePreset, error) {
-	return s.ResumePresets.CreateSingle(accountId, body)
+func (s *PostgresStore) CreateResumePreset(body types.ResumePreset) (types.ResumePreset, error) {
+	return s.ResumePresets.CreateSingle(body)
 }
 
-func (s *PostgresStore) UpdateResumePreset(accountId int, id int, body types.ResumePresetBody) (types.ResumePreset, error) {
-	return s.ResumePresets.UpdateSingle(accountId, id, body)
+func (s *PostgresStore) UpdateResumePreset(body types.ResumePreset) (types.ResumePreset, error) {
+	return s.ResumePresets.UpdateSingle(body)
 }
 
 func (s *PostgresStore) DeleteResumePreset(accountId int, id int) error {
@@ -70,12 +70,12 @@ func (s *PostgresStore) GetResumeSection(accountId int, id int) (types.ResumeSec
 	return s.ResumeSections.GetSingle(accountId, id)
 }
 
-func (s *PostgresStore) CreateResumeSection(accountId int, body types.ResumeSectionBody) (types.ResumeSection, error) {
-	return s.ResumeSections.CreateSingle(accountId, body)
+func (s *PostgresStore) CreateResumeSection(body types.ResumeSection) (types.ResumeSection, error) {
+	return s.ResumeSections.CreateSingle(body)
 }
 
-func (s *PostgresStore) UpdateResumeSection(accountId int, id int, body types.ResumeSectionBody) (types.ResumeSection, error) {
-	return s.ResumeSections.UpdateSingle(accountId, id, body)
+func (s *PostgresStore) UpdateResumeSection(body types.ResumeSection) (types.ResumeSection, error) {
+	return s.ResumeSections.UpdateSingle(body)
 }
 
 func (s *PostgresStore) DeleteResumeSection(accountId int, id int) error {

@@ -3,47 +3,60 @@ package postgres
 import (
 	"database/sql"
 	"reflect"
+	"strings"
 
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
 )
 
-// Function assumes that there is only 1 level of embedding
-func reflectDbFields[T any]() []string {
+func GetDbFields[T any]() []string {
 	var val T
 	v := reflect.ValueOf(&val).Elem()
-	values := make([]string, 0)
+	return getDbTagValues(v, false, "")
+}
 
-	if v.Kind() != reflect.Struct {
-		panic("invalid type provided")
-	}
+func GetDbFieldsForCreate[T any]() []string {
+	var val T
+	v := reflect.ValueOf(&val).Elem()
+	return getDbTagValues(v, true, "body")
+}
 
-	for i := 0; i < v.NumField(); i++ {
-		field := v.Field(i)
-		fieldType := v.Type().Field(i)
+func GetDbFieldsForUpdate[T any]() []string {
+	var val T
+	v := reflect.ValueOf(&val).Elem()
+	return getDbTagValues(v, false, "body")
+}
 
-		tag := fieldType.Tag.Get("db")
-		if tag != "" {
-			values = append(values, tag)
+func getDbTagValues(value reflect.Value, omit bool, checkForTag string) []string {
+	fields := make([]string, 0)
+
+	for i := 0; i < value.NumField(); i++ {
+		field := value.Field(i)
+		fieldType := value.Type().Field(i)
+
+		tag, ok := fieldType.Tag.Lookup("db")
+		if field.Kind() == reflect.Struct && !ok {
+			fields = append(fields, getDbTagValues(field, omit, checkForTag)...)
 			continue
 		}
 
-		if fieldType.Anonymous && field.Kind() == reflect.Struct {
-			for j := 0; j < field.NumField(); j++ {
-				embeddedFieldType := field.Type().Field(j)
-
-				embeddedTag := embeddedFieldType.Tag.Get("db")
-				if embeddedTag != "" {
-					values = append(values, embeddedTag)
-				}
+		if checkForTag != "" {
+			_, ok := fieldType.Tag.Lookup(checkForTag)
+			if !ok {
+				continue
 			}
 		}
+
+		if !ok || tag == "" || (omit && (strings.Contains("id created_at updated_at", tag))) {
+			continue
+		}
+
+		fields = append(fields, tag)
 	}
 
-	return values
+	return fields
 }
 
-// Function assumes that there is only 1 level of embedding
 func getScanFields[T any](val *T) []any {
 	v := reflect.ValueOf(val).Elem()
 
@@ -103,6 +116,7 @@ func createScanWithTagsFunc[T any]() func(scannable db.Scannable) (T, types.Tag,
 		if err := scannable.Scan(fields...); err != nil {
 			return temp, tempTag, err
 		}
+
 		return temp, tempTag, nil
 	}
 }

@@ -12,7 +12,7 @@ func main() {
 	connectionString := os.Getenv("CONNECTION_STRING")
 	port := os.Getenv("PORT")
 
-	store := postgres.CreatePostgresStore(connectionString)
+	store := postgres.NewPostgresStore(connectionString)
 	server := api.CreateServer(port, store)
 	err := server.Start()
 	if err != nil {
