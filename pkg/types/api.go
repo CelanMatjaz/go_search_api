@@ -1,7 +1,6 @@
 package types
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 )
@@ -24,8 +23,6 @@ func CreateApiError(err error, errors []string, statusCode int) ApiError {
 	}
 }
 
-var test = errors.New("test")
-
 var (
 	UnparsableJsonBody   = CreateApiError(InvalidJsonBodyErr, UnparseableJsonBodyErrors, http.StatusUnprocessableEntity)
 	InvalidJsonBody      = CreateApiError(InvalidJsonBodyErr, InvalidJsonBodyErrors, http.StatusUnprocessableEntity)
@@ -37,6 +34,7 @@ var (
 	OAuthProviderIssues  = CreateApiError(OAuthProviderIssuesErr, OAuthProviderIssueErrors, http.StatusServiceUnavailable)
 	UnverifiedOAuthEmail = CreateApiError(nil, UnverifiedOAuthEmailErrors, http.StatusServiceUnavailable)
 	InvalidPathParam     = CreateApiError(nil, UnauthenticatedErrors, http.StatusUnauthorized)
+	PasswordsDoNotMatch  = CreateApiError(nil, PasswordsDoNotMathErrors, http.StatusUnprocessableEntity)
 )
 
 const (

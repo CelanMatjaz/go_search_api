@@ -26,4 +26,5 @@ var (
 	OAuthProviderIssueErrors       = []string{"Issue with authenticating with OAuth provider"}
 	UnverifiedOAuthEmailErrors     = []string{"Email used to authenticate with OAuth is unverified"}
 	InvalidPathParamErrors         = []string{"Path param is not valid"}
+	PasswordsDoNotMathErrors       = []string{"Path param is not valid"}
 )
