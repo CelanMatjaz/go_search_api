@@ -73,7 +73,7 @@ func createGenericGetSingleHandler[T any](
 	}
 }
 
-func createGenericPostHandler[T any, Body types.Verifiable](
+func createGenericPostHandler[T any, Body any](
 	create func(int, Body) (T, error),
 	sendJson func(w http.ResponseWriter, data T) error,
 ) HandlerFunc {
@@ -83,7 +83,7 @@ func createGenericPostHandler[T any, Body types.Verifiable](
 			return types.Unauthenticated
 		}
 
-		body, err := decodeAndVerifyBody[Body](r)
+		body, err := decodeAndValidateBody[Body](r)
 		if err != nil {
 			return err
 		}
@@ -97,7 +97,7 @@ func createGenericPostHandler[T any, Body types.Verifiable](
 	}
 }
 
-func createGenericPutHandler[T any, Body types.Verifiable](
+func createGenericPutHandler[T any, Body any](
 	update func(int, int, Body) (T, error),
 	sendJson func(w http.ResponseWriter, data T) error,
 ) HandlerFunc {
@@ -113,7 +113,7 @@ func createGenericPutHandler[T any, Body types.Verifiable](
 			return types.InvalidPathParam
 		}
 
-		body, err := decodeAndVerifyBody[Body](r)
+		body, err := decodeAndValidateBody[Body](r)
 		if err != nil {
 			return err
 		}

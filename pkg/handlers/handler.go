@@ -24,14 +24,14 @@ func CreateHandler(h HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func decodeAndVerifyBody[T types.Verifiable](r *http.Request) (T, error) {
+func decodeAndValidateBody[T any](r *http.Request) (T, error) {
 	body, err := utils.DecodeJsonBody[T](r)
 	if err != nil {
 		return body, err
 	}
 
-	if err := utils.VerifyBody(body); err != nil {
-		return body, err
+	if validateErrors := utils.Validate(body); len(validateErrors) > 0 {
+		return body, types.CreateApiError(nil, validateErrors, http.StatusBadRequest)
 	}
 
 	return body, nil

@@ -75,9 +75,9 @@ func DecodeJsonBody[T any](r *http.Request) (T, error) {
 	return body, nil
 }
 
-func VerifyBody[T types.Verifiable](body T) error {
-	if errors := body.Verify(); len(errors) > 0 {
-		return types.CreateApiError(types.InvalidJsonBody, errors, http.StatusUnprocessableEntity)
+func VerifyBody[T any](body T) error {
+	if validateErrors := Validate(body); len(validateErrors) > 0 {
+		return types.CreateApiError(nil, validateErrors, http.StatusBadRequest)
 	}
 
 	return nil

@@ -33,9 +33,13 @@ func (h *AuthHandler) AddRoutes(r chi.Router) {
 }
 
 func (h *AuthHandler) handleRegister(w http.ResponseWriter, r *http.Request) error {
-	body, err := decodeAndVerifyBody[types.RegisterBody](r)
+	body, err := decodeAndValidateBody[types.RegisterBody](r)
 	if err != nil {
 		return err
+	}
+
+	if body.Password != body.PasswordVerify {
+		return types.PasswordsDoNotMatch
 	}
 
 	_, exists, err := h.store.GetAccountByEmail(body.Email)
@@ -57,7 +61,7 @@ func (h *AuthHandler) handleRegister(w http.ResponseWriter, r *http.Request) err
 }
 
 func (h *AuthHandler) handleLogin(w http.ResponseWriter, r *http.Request) error {
-	body, err := decodeAndVerifyBody[types.LoginBody](r)
+	body, err := decodeAndValidateBody[types.LoginBody](r)
 	if err != nil {
 		return types.UnparsableJsonBody
 	}
@@ -114,7 +118,7 @@ func (h *AuthHandler) handleAuthCheck(w http.ResponseWriter, r *http.Request) er
 }
 
 func (h *AuthHandler) handleOAuth(w http.ResponseWriter, r *http.Request) error {
-	body, err := decodeAndVerifyBody[types.OAuthLoginBody](r)
+	body, err := decodeAndValidateBody[types.OAuthLoginBody](r)
 	if err != nil {
 		return types.UnparsableJsonBody
 	}
@@ -147,7 +151,6 @@ func (h *AuthHandler) handleOAuth(w http.ResponseWriter, r *http.Request) error 
 	if err != nil {
 		return err
 	}
-
 
 	if !exists {
 		account, err = h.store.CreateAccountWithOAuth(types.Account{
