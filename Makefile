@@ -23,4 +23,4 @@ test-verbose:
 	go test ./pkg/... -v
 
 format:
- 	go fmt ./pkg/...
+ 	$('go fmt ./pkg/...')

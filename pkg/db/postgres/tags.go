@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/utils"
 )
 
 var tagQueryHolder = createQueryHolder[types.Tag](TagsTable, false)
@@ -30,15 +31,16 @@ func (s *PostgresStore) CreateTag(accountId int, tag types.Tag) (types.Tag, erro
 }
 
 func (s *PostgresStore) UpdateTag(accountId int, tagId int, tag types.Tag) (types.Tag, error) {
+	println(tagQueryHolder.updateSingle)
 	return WithTransactionScan(
 		s.Db, getRecord, tagScanFunc,
 		tagQueryHolder.updateSingle,
-		tag.Label, tag.Color, tagId, accountId,
+		utils.GetValuesFromBody(tag)...,
 	)
 }
 
 func (s *PostgresStore) DeleteTag(accountId int, tagId int) error {
-	return WithTransaction(s.Db, deleteRecord, tagQueryHolder.deleteSingle, accountId, tagId)
+	return WithTransaction(s.Db, deleteRecord, tagQueryHolder.deleteSingle, tagId, accountId)
 }
 
 var (

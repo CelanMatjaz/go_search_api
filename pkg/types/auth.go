@@ -8,11 +8,12 @@ import (
 
 type Account struct {
 	Common
-	DisplayName  string     `json:"displayName" db:"display_name"`
-	Email        string     `json:"email" db:"email"`
-	PasswordHash NullString `json:"-" db:"password_hash"`
-	TokenVersion int        `json:"-" db:"refresh_token_version"`
+	DisplayName  string `json:"displayName" db:"display_name" body:""`
+	Email        string `json:"email" db:"email" body:""`
+	TokenVersion int    `json:"-" db:"refresh_token_version"`
+	IsOauth      bool   `json:"-" db:"is_oauth"`
 	Timestamps
+	PasswordHash NullString `json:"-" db:"password_hash"`
 }
 
 type RegisterBody struct {

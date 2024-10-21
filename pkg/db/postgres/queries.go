@@ -104,7 +104,7 @@ func SingleRecordQuery[T any](recordTable string) string {
 	tmpl := `
         SELECT {{ join .Fields ", " }} 
         FROM {{ .RecordTable }} 
-        WHERE account_id = $1, id = $2`
+        WHERE account_id = $1 AND id = $2`
 
 	return execQueryTemplate(tmpl, BasicQueryData{
 		RecordTable: recordTable,

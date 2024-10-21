@@ -29,18 +29,22 @@ func (s *PostgresStore) CreateAccount(account types.Account) (types.Account, err
         WITH new_account AS (
             INSERT INTO accounts (display_name, email) 
             VALUES ($1, $2) 
-            RETURNING id
-        )
-        INSERT INTO password_hashes (account_id, password_hash) 
-        SELECT id, $3 FROM new_account
-        RETURNING account_id as id;`,
+            RETURNING *
+        ),
+        _ AS (
+            INSERT INTO password_hashes (account_id, password_hash) 
+            VALUES ((SELECT id FROM new_account), $3)
+            RETURNING *
+        ) 
+        SELECT new_account.*, ph.password_hash FROM new_account
+        LEFT JOIN _ ph
+        ON ph.account_id = new_account.id`,
 		account.DisplayName,
 		account.Email,
 		account.PasswordHash,
 	)
 
-	newAccount := &types.Account{}
-	err = row.Scan(&account.Id)
+	newAccount, err := accountScanFunc(row)
 	if err != nil {
 		return acc, err
 	}
@@ -50,7 +54,7 @@ func (s *PostgresStore) CreateAccount(account types.Account) (types.Account, err
 		return acc, err
 	}
 
-	return *newAccount, nil
+	return newAccount, nil
 }
 
 func (s *PostgresStore) CreateAccountWithOAuth(account types.Account, tokenResponse types.TokenResponse, clientId int) (types.Account, error) {

@@ -41,14 +41,14 @@ func (s GenericStore[T]) CreateSingle(body T) (T, error) {
 	return WithTransactionScan(
 		s.db, getRecord, s.scan,
 		s.queries.createSingle,
-        utils.GetValuesFromBody(body),
+		utils.GetValuesFromBody(body),
 	)
 }
 func (s GenericStore[T]) UpdateSingle(body T) (T, error) {
 	return WithTransactionScan(
 		s.db, getRecord, s.scan,
 		s.queries.updateSingle,
-        utils.GetValuesFromBody(body),
+		utils.GetValuesFromBody(body),
 	)
 }
 

@@ -27,36 +27,36 @@ func main() {
 
 	db, err := sql.Open("postgres", connectionString)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	path, _ := filepath.Abs("migrations")
 	migration, err := migrate.NewWithDatabaseInstance(fmt.Sprint("file://", path), "postgres", driver)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	switch os.Args[1] {
 	case "up":
 		if err := migration.Up(); err != nil {
-			panic(err)
+			log.Fatalf("Could not migrate up, %s", err.Error())
 		}
 		break
 
 	case "down":
 		if err := migration.Down(); err != nil {
-			panic(err)
+			log.Fatalf("Could not migrate down, %s", err.Error())
 		}
 		break
 
 	case "reset":
 		if err := migration.Drop(); err != nil {
-			panic(err)
+			log.Fatalf("Could not drop db, %s", err.Error())
 		}
 		break
 

@@ -93,7 +93,7 @@ func genericGetRecordsWithTags[T CanSetTags](
 			recordArr = append(recordArr, scannedRecord)
 		}
 
-		if tag.Id.Valid {
+		if tag.Id < 0 {
 			recordArr[recordIndex].AppendTag(tag)
 		}
 	}
