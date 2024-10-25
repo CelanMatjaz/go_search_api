@@ -7,7 +7,7 @@ import (
 )
 
 type Account struct {
-	Common
+	WithId
 	DisplayName  string `json:"displayName" db:"display_name" body:""`
 	Email        string `json:"email" db:"email" body:""`
 	TokenVersion int    `json:"-" db:"refresh_token_version"`

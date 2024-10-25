@@ -5,28 +5,34 @@ import (
 	"reflect"
 )
 
-func GetValuesFromBody(body any) []any {
-	values := make([]any, 0)
-
+func GetValuesFromBody(body any, prepend []any) []any {
 	v := reflect.ValueOf(body)
 
 	for i := range v.NumField() {
 		field := v.Field(i)
 		fieldType := v.Type().Field(i)
 
+		if field.Kind() == reflect.Pointer {
+			if field.IsNil() {
+				continue
+			} else {
+				field = field.Elem()
+			}
+		}
+
 		if field.Kind() == reflect.Struct {
-			values = append(values, GetValuesFromBody(field.Interface())...)
+			prepend = GetValuesFromBody(field.Interface(), prepend)
 			continue
 		}
 
-		if _, ok := fieldType.Tag.Lookup("body"); !ok {
+		if bodyTag, ok := fieldType.Tag.Lookup("body"); !ok || bodyTag == "omit" {
 			continue
 		}
 
-		values = append(values, getValues(field)...)
+		prepend = append(prepend, getValues(field)...)
 	}
 
-	return values
+	return prepend
 }
 
 func getValues(val reflect.Value) []any {

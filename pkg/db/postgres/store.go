@@ -11,10 +11,10 @@ import (
 type PostgresStore struct {
 	Db *sql.DB
 
-	ApplicationSections StoreWithTags[types.ApplicationSection]
-	ApplicationPresets  StoreWithTags[types.ApplicationPreset]
-	ResumeSections      StoreWithTags[types.ResumeSection]
-	ResumePresets       StoreWithTags[types.ResumePreset]
+	ApplicationSections DefaultStoreWithTags[types.ApplicationSection]
+	ApplicationPresets  DefaultStoreWithTags[types.ApplicationPreset]
+	ResumeSections      DefaultStoreWithTags[types.ResumeSection]
+	ResumePresets       DefaultStoreWithTags[types.ResumePreset]
 }
 
 func NewPostgresStore(connectionString string) *PostgresStore {
@@ -35,10 +35,19 @@ func CreatePostgresStore(db *sql.DB) *PostgresStore {
 	}
 }
 
-type StoreWithTags[T any] interface {
-	GetMany(accountId int, pagination types.PaginationParams) ([]T, error)
+type DefaultStoreCommon[T any] interface {
 	GetSingle(accountId int, recordId int) (T, error)
-	CreateSingle(body T) (T, error)
-	UpdateSingle(body T) (T, error)
+	CreateSingle(accountId int, body T) (T, error)
+	UpdateSingle(accountId int, recordId int, body T) (T, error)
 	DeleteSingle(accountId int, recordId int) error
+}
+
+type DefaultStore[T any] interface {
+	GetMany(accountId int, pagination types.PaginationParams) ([]T, error)
+	DefaultStoreCommon[T]
+}
+
+type DefaultStoreWithTags[T any] interface {
+	GetMany(accountId int, pagination types.PaginationParams) ([]types.RecordWithTags[T], error)
+	DefaultStoreCommon[T]
 }

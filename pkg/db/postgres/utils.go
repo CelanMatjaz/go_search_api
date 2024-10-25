@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
-	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
 )
 
 func GetDbFields[T any]() []string {
@@ -57,7 +56,7 @@ func getDbTagValues(value reflect.Value, omit bool, checkForTag string) []string
 	return fields
 }
 
-func getScanFields[T any](val *T) []any {
+func GetScanFields[T any](val *T) []any {
 	v := reflect.ValueOf(val).Elem()
 
 	if reflect.TypeOf(*val).Kind() != reflect.Struct {
@@ -95,7 +94,7 @@ func getScanFields[T any](val *T) []any {
 
 func createScanFunc[T any]() func(scannable db.Scannable) (T, error) {
 	var temp T
-	fields := getScanFields(&temp)
+	fields := GetScanFields(&temp)
 
 	return func(scannable db.Scannable) (T, error) {
 		if err := scannable.Scan(fields...); err != nil {
@@ -105,21 +104,21 @@ func createScanFunc[T any]() func(scannable db.Scannable) (T, error) {
 	}
 }
 
-func createScanWithTagsFunc[T any]() func(scannable db.Scannable) (T, types.Tag, error) {
-	var temp T
-	fields := getScanFields(&temp)
-
-	var tempTag types.Tag
-	fields = append(fields, getScanFields(&tempTag)...)
-
-	return func(scannable db.Scannable) (T, types.Tag, error) {
-		if err := scannable.Scan(fields...); err != nil {
-			return temp, tempTag, err
-		}
-
-		return temp, tempTag, nil
-	}
-}
+// func createScanWithTagsFunc[T any]() func(scannable db.Scannable) (*T, types.Tag, error) {
+// 	var temp T
+// 	fields := getScanFields(&temp)
+//
+// 	var tempTag types.ScanTag
+// 	fields = append(fields, getScanFields(&tempTag)...)
+//
+// 	return func(scannable db.Scannable) (*T, types.Tag, error) {
+// 		if err := scannable.Scan(fields...); err != nil {
+// 			return &temp, tempTag.Tag(), err
+// 		}
+//
+// 		return &temp, tempTag.Tag(), nil
+// 	}
+// }
 
 // ???
 func WithTransaction(

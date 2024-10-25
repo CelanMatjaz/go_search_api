@@ -9,35 +9,33 @@ import (
 
 func TestGenericStore(t *testing.T) {
 	db, conn := createDbAndStore()
-	defer cleanupDb(db)
+	t.Cleanup(func() {
+		cleanupDb(db)
+	})
 
 	store := postgres.CreatePostgresStore(conn.Db)
 	account := seedAccount(t, store)
 
-	_, err := store.CreateResumeSection(types.ResumeSection{
-		AccountId: account.Id,
-		Label:     "label",
-		Text:      "text",
-		WithTags: types.WithTags{
-			TagIds: []int{},
-		},
+	_, err := store.CreateResumeSection(account.Id, types.ResumeSection{
+		Label:    "label",
+		Text:     "text",
+		WithTags: &types.WithTags{},
 	})
 	if err != nil {
 		t.Fatalf("could not create resume section, %s", err.Error())
 	}
 
-	sections, err := store.GetResumeSections(account.Id, types.PaginationParams{})
-
+	sections, err := store.GetResumeSections(account.Id, types.DefaultPagaintion())
 	if err != nil {
-		t.Fatalf("could not get resume sections, %s", err.Error())
+		t.Fatalf("could not query resume sections, %s", err.Error())
 	}
 
-    if  len(sections) == 0 {
-        t.Errorf("no sections found")
-    }
-
-	for i, s := range sections {
-		t.Errorf("%d %v", i, s)
+	if len(sections) == 0 {
+		t.Errorf("no sections found")
 	}
+
+	// for i, s := range sections {
+	// 	t.Errorf("%d %v", i, s)
+	// }
 
 }

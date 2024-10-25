@@ -57,44 +57,44 @@ func deleteRecord(tx *sql.Tx, query string, args ...any) error {
 	return nil
 }
 
-type CanSetTags interface {
+type HasIdAndTags interface {
 	GetId() int
-	AppendTag(newTag types.Tag)
 	GetTagCount() int
 }
 
-func genericGetRecordsWithTags[T CanSetTags](
+func genericGetRecordsWithTags[T HasIdAndTags](
 	db *sql.DB,
-	scan func(db.Scannable) (T, types.Tag, error),
 	query string, accountId int,
 	pagination types.PaginationParams,
-) ([]T, error) {
+) ([]types.RecordWithTags[T], error) {
 	rows, err := db.Query(query, accountId, pagination.GetOffset(), pagination.Count)
 	if err != nil {
 		return nil, err
 	}
 
 	recordSet := make(map[int]int)
-	recordArr := make([]T, 0)
+	recordArr := make([]types.RecordWithTags[T], 0)
 
-	i := 0
+	var record T
+	scanFields := GetScanFields(&record)
+	var tag types.ScanTag
+	scanFields = append(scanFields, GetScanFields(&tag)...)
+
 	for rows.Next() {
-		i++
-		scannedRecord, tag, err := scan(rows)
-
+		err := rows.Scan(scanFields...)
 		if err != nil {
 			return nil, err
 		}
 
-		recordIndex, exists := recordSet[scannedRecord.GetId()]
+		recordIndex, exists := recordSet[(record).GetId()]
 		if !exists {
-			recordSet[scannedRecord.GetId()] = len(recordArr)
+			recordSet[(record).GetId()] = len(recordArr)
 			recordIndex = len(recordArr)
-			recordArr = append(recordArr, scannedRecord)
+			recordArr = append(recordArr, types.RecordWithTags[T]{Record: record})
 		}
 
-		if tag.Id < 0 {
-			recordArr[recordIndex].AppendTag(tag)
+		if tag.Id.Valid {
+			recordArr[recordIndex].Tags = append(recordArr[recordIndex].Tags, tag.Tag())
 		}
 	}
 

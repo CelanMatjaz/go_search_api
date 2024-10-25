@@ -65,7 +65,7 @@ func TestSingleRecordQuery(t *testing.T) {
 	t.Parallel()
 
 	testCases := []QueryTestCase{
-		{expectedQuery: "SELECT id, account_id, test_field1, test_field2, created_at, updated_at FROM table WHERE account_id = $1, id = $2"},
+		{expectedQuery: "SELECT id, account_id, test_field1, test_field2, created_at, updated_at FROM table WHERE account_id = $1 AND id = $2"},
 	}
 
 	generatedQuery := postgres.SingleRecordQuery[TestQueryType]("table")

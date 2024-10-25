@@ -37,9 +37,9 @@ func (h *ApplicationHandler) AddRoutes(r chi.Router) {
 	})
 }
 
-func sendApplicationPresets(w http.ResponseWriter, data []types.ApplicationPreset) error {
+func sendApplicationPresets(w http.ResponseWriter, data []AppPreWithTags) error {
 	return utils.SendJson(w, struct {
-		Presets []types.ApplicationPreset `json:"applicationPresets"`
+		Presets []AppPreWithTags `json:"applicationPresets"`
 	}{Presets: data}, http.StatusOK)
 }
 
@@ -49,9 +49,9 @@ func sendApplicationPreset(w http.ResponseWriter, data types.ApplicationPreset) 
 	}{Preset: data}, http.StatusOK)
 }
 
-func sendApplicationSections(w http.ResponseWriter, data []types.ApplicationSection) error {
+func sendApplicationSections(w http.ResponseWriter, data []AppSecWithTags) error {
 	return utils.SendJson(w, struct {
-		Sections []types.ApplicationSection `json:"applicationSections"`
+		Sections []AppSecWithTags `json:"applicationSections"`
 	}{Sections: data}, http.StatusOK)
 }
 

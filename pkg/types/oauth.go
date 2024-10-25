@@ -14,7 +14,7 @@ func (b OAuthLoginBody) Verify() []string {
 }
 
 type OAuthClient struct {
-	Common
+	WithId
 	Name                string `json:"-" db:"name"`
 	ClientId            string `json:"-" db:"client_id"`
 	ClientSecret        string `json:"-" db:"client_secret"`

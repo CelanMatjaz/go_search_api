@@ -49,6 +49,14 @@ type PaginationParams struct {
 	Offset int `json:"offset"`
 }
 
+func DefaultPagaintion() PaginationParams {
+	return PaginationParams{
+		Page:   1,
+		Count:  10,
+		Offset: 0,
+	}
+}
+
 func (p *PaginationParams) GetOffset() int {
 	return p.Offset + (p.Page-1)*p.Count
 }

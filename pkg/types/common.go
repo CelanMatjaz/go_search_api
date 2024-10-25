@@ -2,8 +2,12 @@ package types
 
 import "time"
 
-type Common struct {
+type WithId struct {
 	Id int `json:"id" db:"id"`
+}
+
+type WithAccountId struct {
+	AccountId int `json:"-" db:"account_id" body:"omit"`
 }
 
 type Timestamps struct {
@@ -11,6 +15,6 @@ type Timestamps struct {
 	UpdatedAt time.Time `db:"updated_at" json:"updatedAt"`
 }
 
-func (c Common) GetId() int {
+func (c WithId) GetId() int {
 	return c.Id
 }

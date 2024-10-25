@@ -37,9 +37,9 @@ func (h *ResumeHandler) AddRoutes(r chi.Router) {
 	})
 }
 
-func sendResumePresets(w http.ResponseWriter, data []types.ResumePreset) error {
+func sendResumePresets(w http.ResponseWriter, data []ResPreWithTags) error {
 	return utils.SendJson(w, struct {
-		Presets []types.ResumePreset `json:"resumePresets"`
+		Presets []ResPreWithTags `json:"resumePresets"`
 	}{Presets: data}, http.StatusOK)
 }
 
@@ -49,9 +49,9 @@ func sendResumePreset(w http.ResponseWriter, data types.ResumePreset) error {
 	}{Preset: data}, http.StatusOK)
 }
 
-func sendResumeSections(w http.ResponseWriter, data []types.ResumeSection) error {
+func sendResumeSections(w http.ResponseWriter, data []ResSecWithTags) error {
 	return utils.SendJson(w, struct {
-		Sections []types.ResumeSection `json:"resumeSections"`
+		Sections []ResSecWithTags `json:"resumeSections"`
 	}{Sections: data}, http.StatusOK)
 }
 

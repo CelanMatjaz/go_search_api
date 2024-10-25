@@ -8,26 +8,23 @@ import (
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/utils"
 )
 
-type GenericStoreWithTags[T CanSetTags] struct {
-	db          *sql.DB
-	scan        func(scannable db.Scannable) (T, error)
-	scanWithTag func(scannable db.Scannable) (T, types.Tag, error)
-	queries     QueryHolderWithCreateTags
+type GenericStoreWithTags[T HasIdAndTags] struct {
+	db      *sql.DB
+	scan    func(scannable db.Scannable) (T, error)
+	queries QueryHolderWithCreateTags
 }
 
-func CreateGenericStoreWithTags[T CanSetTags](db *sql.DB, table string, mtmTable string) StoreWithTags[T] {
+func CreateGenericStoreWithTags[T HasIdAndTags](db *sql.DB, table string, mtmTable string) DefaultStoreWithTags[T] {
 	return GenericStoreWithTags[T]{
-		db:          db,
-		scan:        createScanFunc[T](),
-		scanWithTag: createScanWithTagsFunc[T](),
-		queries:     createQueryHolderWithTags[T](table, mtmTable),
+		db:      db,
+		scan:    createScanFunc[T](),
+		queries: createQueryHolderWithTags[T](table, mtmTable),
 	}
 }
 
-func (s GenericStoreWithTags[T]) GetMany(accountId int, pagination types.PaginationParams) ([]T, error) {
-	return genericGetRecordsWithTags(
-		s.db, s.scanWithTag,
-		s.queries.queryManyWithTags,
+func (s GenericStoreWithTags[T]) GetMany(accountId int, pagination types.PaginationParams) ([]types.RecordWithTags[T], error) {
+	return genericGetRecordsWithTags[T](
+		s.db, s.queries.queryManyWithTags,
 		accountId, pagination)
 }
 
@@ -39,7 +36,7 @@ func (s GenericStoreWithTags[T]) GetSingle(accountId int, recordId int) (T, erro
 	)
 }
 
-func (s GenericStoreWithTags[T]) CreateSingle(body T) (T, error) {
+func (s GenericStoreWithTags[T]) CreateSingle(accountId int, body T) (T, error) {
 	var value T
 	tx, err := s.db.Begin()
 	defer tx.Rollback()
@@ -48,7 +45,7 @@ func (s GenericStoreWithTags[T]) CreateSingle(body T) (T, error) {
 	}
 
 	query := s.queries.createWithTags(body.GetTagCount())
-	row := tx.QueryRow(query, utils.GetValuesFromBody(body)...)
+	row := tx.QueryRow(query, utils.GetValuesFromBody(body, []any{accountId})...)
 	value, err = s.scan(row)
 	if err != nil {
 		return value, err
@@ -62,11 +59,11 @@ func (s GenericStoreWithTags[T]) CreateSingle(body T) (T, error) {
 	return value, err
 }
 
-func (s GenericStoreWithTags[T]) UpdateSingle(body T) (T, error) {
+func (s GenericStoreWithTags[T]) UpdateSingle(accountId int, recordId int, body T) (T, error) {
 	return WithTransactionScan(
 		s.db, getRecord, s.scan,
 		s.queries.updateSingle,
-		utils.GetValuesFromBody(body)...,
+		utils.GetValuesFromBody(body, []any{recordId, accountId})...,
 	)
 }
 
@@ -74,6 +71,6 @@ func (s GenericStoreWithTags[T]) DeleteSingle(accountId int, recordId int) error
 	return WithTransaction(
 		s.db, deleteRecord,
 		s.queries.deleteSingle,
-		accountId, recordId,
+		recordId, accountId,
 	)
 }

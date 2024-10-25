@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
 )
 
 func TestGetValuesFromBody(t *testing.T) {
@@ -24,6 +26,11 @@ func TestGetValuesFromBody(t *testing.T) {
 		value4 int    `body:""`
 		value5 []int  `body:""`
 		value6 string `body:""`
+	}
+
+	type Struct3 struct {
+		Struct1
+		*types.WithTags
 	}
 
 	testCases := []TestCase{
@@ -57,11 +64,29 @@ func TestGetValuesFromBody(t *testing.T) {
 			expectedValues: []any{1, 2, 3, 4, "test"},
 			shouldFail:     true,
 		},
+		{
+			structWithValues: Struct3{
+				Struct1: Struct1{value1: 1, value2: []int{2, 3, 4}, value3: "test"},
+				WithTags: &types.WithTags{
+					TagIds: []int{1, 2, 3},
+				},
+			},
+			expectedValues: []any{int64(1), int64(2), int64(3), int64(4), "test", int64(1), int64(2), int64(3)},
+			shouldFail:     false,
+		},
+		{
+			structWithValues: Struct3{
+				Struct1:  Struct1{value1: 1, value2: []int{2, 3, 4}, value3: "test"},
+				WithTags: nil,
+			},
+			expectedValues: []any{int64(1), int64(2), int64(3), int64(4), "test"},
+			shouldFail:     false,
+		},
 	}
 
 	printSlices := func(expectedValues []any, generatedValues []any) {
-		fmt.Printf("expected values  %v\n", expectedValues)
-		fmt.Printf("generated values %v\n", generatedValues)
+		t.Logf("expected values  %v\n", expectedValues)
+		t.Logf("generated values %v\n", generatedValues)
 	}
 
 	compareSlices := func(expectedValues []any, generatedValues []any) error {
@@ -74,7 +99,8 @@ func TestGetValuesFromBody(t *testing.T) {
 			generatedType := reflect.TypeOf(generatedValues[i])
 
 			if expectedType != generatedType {
-				return fmt.Errorf("expected and generated values are not of equal type at index %d ", i)
+				return fmt.Errorf("expected and generated values are not of equal type at index %d\nexpected type:  %s\ngenerated type: %s",
+					i, expectedType.String(), generatedType.String())
 			}
 
 			if !reflect.DeepEqual(expectedValues[i], generatedValues[i]) {
@@ -86,7 +112,7 @@ func TestGetValuesFromBody(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		values := GetValuesFromBody(tc.structWithValues)
+		values := GetValuesFromBody(tc.structWithValues, []any{})
 		if err := compareSlices(tc.expectedValues, values); (err != nil) && !tc.shouldFail {
 			printSlices(tc.expectedValues, values)
 			t.Errorf(

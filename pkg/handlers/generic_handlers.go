@@ -73,8 +73,8 @@ func createGenericGetSingleHandler[T any](
 	}
 }
 
-func createGenericPostHandler[T any, Body any](
-	create func(int, Body) (T, error),
+func createGenericPostHandler[T any](
+	create func(int, T) (T, error),
 	sendJson func(w http.ResponseWriter, data T) error,
 ) HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
@@ -83,12 +83,12 @@ func createGenericPostHandler[T any, Body any](
 			return types.Unauthenticated
 		}
 
-		body, err := decodeAndValidateBody[Body](r)
+		body, err := decodeAndValidateBody[T](r)
 		if err != nil {
 			return err
 		}
 
-		data, err := create(accountId, body)
+		data, err := create(accountId,body)
 		if err != nil {
 			return err
 		}
@@ -97,8 +97,8 @@ func createGenericPostHandler[T any, Body any](
 	}
 }
 
-func createGenericPutHandler[T any, Body any](
-	update func(int, int, Body) (T, error),
+func createGenericPutHandler[T any](
+	update func(int, int, T) (T, error),
 	sendJson func(w http.ResponseWriter, data T) error,
 ) HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
@@ -113,7 +113,7 @@ func createGenericPutHandler[T any, Body any](
 			return types.InvalidPathParam
 		}
 
-		body, err := decodeAndValidateBody[Body](r)
+		body, err := decodeAndValidateBody[T](r)
 		if err != nil {
 			return err
 		}

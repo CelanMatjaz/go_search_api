@@ -8,13 +8,13 @@ import (
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/utils"
 )
 
-type GenericStore[T CanSetTags] struct {
+type GenericStore[T any] struct {
 	db      *sql.DB
 	scan    func(scannable db.Scannable) (T, error)
 	queries QueryHolder
 }
 
-func createGenericStore[T CanSetTags](db *sql.DB, table string, hasPagination bool) StoreWithTags[T] {
+func createGenericStore[T any](db *sql.DB, table string, hasPagination bool) DefaultStore[T] {
 	return GenericStore[T]{
 		db:      db,
 		scan:    createScanFunc[T](),
@@ -37,18 +37,19 @@ func (s GenericStore[T]) GetSingle(accountId int, recordId int) (T, error) {
 	)
 }
 
-func (s GenericStore[T]) CreateSingle(body T) (T, error) {
+func (s GenericStore[T]) CreateSingle(accountId int, body T) (T, error) {
 	return WithTransactionScan(
 		s.db, getRecord, s.scan,
 		s.queries.createSingle,
-		utils.GetValuesFromBody(body),
+		accountId, utils.GetValuesFromBody(body, []any{}),
 	)
 }
-func (s GenericStore[T]) UpdateSingle(body T) (T, error) {
+
+func (s GenericStore[T]) UpdateSingle(accountId int, id int, body T) (T, error) {
 	return WithTransactionScan(
 		s.db, getRecord, s.scan,
 		s.queries.updateSingle,
-		utils.GetValuesFromBody(body),
+		utils.GetValuesFromBody(body, []any{id, accountId}),
 	)
 }
 
