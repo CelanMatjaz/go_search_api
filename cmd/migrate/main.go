@@ -21,7 +21,7 @@ func main() {
 		log.Fatal("Provide a subcommand, either of 'up', 'down' or 'reset'")
 	}
 
-	envFile := flag.String("env", "dev.env", "env file")
+	envFile := flag.String("env", "local.env", "env file")
 	godotenv.Load(*envFile)
 	connectionString := os.Getenv("CONNECTION_STRING")
 
