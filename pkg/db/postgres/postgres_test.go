@@ -1,6 +1,7 @@
 package postgres_test
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"path/filepath"
@@ -16,9 +17,10 @@ import (
 )
 
 func createDbAndStore() (*embeddedpostgres.EmbeddedPostgres, *postgres.PostgresStore) {
+	logger := &bytes.Buffer{}
 	database := embeddedpostgres.NewDatabase(
 		embeddedpostgres.DefaultConfig().
-			Port(54321),
+			Port(54321).Logger(logger),
 	)
 	err := database.Start()
 	if err != nil {

@@ -12,7 +12,7 @@ type Account struct {
 	Email        string `json:"email" db:"email" body:""`
 	TokenVersion int    `json:"-" db:"refresh_token_version"`
 	IsOauth      bool   `json:"-" db:"is_oauth"`
-	Timestamps
+	WithTimestamps
 	PasswordHash NullString `json:"-" db:"password_hash"`
 }
 

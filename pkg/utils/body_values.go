@@ -3,14 +3,20 @@ package utils
 import (
 	"fmt"
 	"reflect"
+	"strings"
 )
 
-func GetValuesFromBody(body any, prepend []any) []any {
+func GetValuesFromBody(body any, neededTagValue string, prepend []any) []any {
 	v := reflect.ValueOf(body)
 
 	for i := range v.NumField() {
 		field := v.Field(i)
 		fieldType := v.Type().Field(i)
+
+        // TODO: create a more generic solution
+		if fieldType.Tag.Get("db") == "account_id" {
+			continue
+		}
 
 		if field.Kind() == reflect.Pointer {
 			if field.IsNil() {
@@ -21,11 +27,11 @@ func GetValuesFromBody(body any, prepend []any) []any {
 		}
 
 		if field.Kind() == reflect.Struct {
-			prepend = GetValuesFromBody(field.Interface(), prepend)
+			prepend = GetValuesFromBody(field.Interface(), neededTagValue, prepend)
 			continue
 		}
 
-		if bodyTag, ok := fieldType.Tag.Lookup("body"); !ok || bodyTag == "omit" {
+		if bodyTag, ok := fieldType.Tag.Lookup("body"); !ok || bodyTag == "omit" || !strings.Contains(bodyTag, neededTagValue) {
 			continue
 		}
 

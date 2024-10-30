@@ -23,8 +23,8 @@ func (t ScanTag) Tag() Tag {
 type Tag struct {
 	WithId
 	WithAccountId
-	Label string `json:"label" db:"label" body:"" validate:"required,min:1,max:32"`
-	Color string `json:"color" db:"color" body:"" validate:"required,len:7"`
+	Label string `json:"label" db:"label" body:"create,update" validate:"required,min:1,max:32"`
+	Color string `json:"color" db:"color" body:"create,update" validate:"required,len:7"`
 }
 
 func CreateTag(accountId int, label string, color string) Tag {
@@ -43,7 +43,7 @@ type TagBody struct {
 }
 
 type WithTags struct {
-	TagIds []int `json:"tagIds,omitempty" body:""`
+	TagIds []int `json:"tagIds,omitempty" body:"create"`
 }
 
 type RecordWithTags[T any] struct {

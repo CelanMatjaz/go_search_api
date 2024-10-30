@@ -22,11 +22,11 @@ func (s *PostgresStore) GetTag(accountId int, tagId int) (types.Tag, error) {
 	return WithTransactionScan(s.Db, getRecord, tagScanFunc, tagQueryHolder.querySingle, accountId, tagId)
 }
 
-func (s *PostgresStore) CreateTag(tag types.Tag) (types.Tag, error) {
+func (s *PostgresStore) CreateTag(accountId int, tag types.Tag) (types.Tag, error) {
 	return WithTransactionScan(
 		s.Db, getRecord, tagScanFunc,
 		tagQueryHolder.createSingle,
-		tag.AccountId, tag.Label, tag.Color,
+		accountId, tag.Label, tag.Color,
 	)
 }
 
@@ -34,7 +34,7 @@ func (s *PostgresStore) UpdateTag(accountId int, id int, tag types.Tag) (types.T
 	return WithTransactionScan(
 		s.Db, getRecord, tagScanFunc,
 		tagQueryHolder.updateSingle,
-		utils.GetValuesFromBody(tag, []any{accountId, id})...,
+		utils.GetValuesFromBody(tag, "update", []any{accountId, id})...,
 	)
 }
 

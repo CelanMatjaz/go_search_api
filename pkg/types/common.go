@@ -3,16 +3,16 @@ package types
 import "time"
 
 type WithId struct {
-	Id int `json:"id" db:"id"`
+	Id int `json:"id" db:"id" body:"select"`
 }
 
 type WithAccountId struct {
-	AccountId int `json:"-" db:"account_id" body:"omit"`
+	AccountId int `json:"-" db:"account_id" body:"create,select"`
 }
 
-type Timestamps struct {
-	CreatedAt time.Time `db:"created_at" json:"createdAt"`
-	UpdatedAt time.Time `db:"updated_at" json:"updatedAt"`
+type WithTimestamps struct {
+	CreatedAt time.Time `db:"created_at" json:"createdAt" body:"select"`
+	UpdatedAt time.Time `db:"updated_at" json:"updatedAt" body:"update,select"`
 }
 
 func (c WithId) GetId() int {

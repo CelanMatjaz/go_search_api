@@ -199,7 +199,7 @@ func createTags(t *testing.T, store *postgres.PostgresStore, accountId int) ([]t
 	tagIds := make([]int, len(tags))
 
 	for i, tag := range tags {
-		newTag, err := store.CreateTag(tag)
+		newTag, err := store.CreateTag(accountId, tag)
 		if err != nil {
 			t.Fatalf("Could not create new tag, %s", err.Error())
 		}

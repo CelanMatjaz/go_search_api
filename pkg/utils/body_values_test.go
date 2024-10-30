@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -9,116 +8,121 @@ import (
 )
 
 func TestGetValuesFromBody(t *testing.T) {
-	type TestCase struct {
-		structWithValues any
-		expectedValues   []any
-		shouldFail       bool
-	}
+	t.Parallel()
 
 	type Struct1 struct {
-		value1 int    `body:""`
-		value2 []int  `body:""`
-		value3 string `body:""`
+		value1 int    `body:"create"`
+		value2 []int  `body:"update,create"`
+		value3 string `body:"update"`
 	}
 
 	type Struct2 struct {
 		Struct1
 		value4 int    `body:""`
-		value5 []int  `body:""`
-		value6 string `body:""`
+		value5 []int  `body:"create"`
+		value6 string `body:"update"`
 	}
 
 	type Struct3 struct {
-		Struct1
+		Struct2
 		*types.WithTags
 	}
 
-	testCases := []TestCase{
-		{
-			structWithValues: Struct1{value1: 1, value2: []int{2, 3, 4}, value3: "test"},
-			expectedValues:   []any{int64(1), int64(2), int64(3), int64(4), "test"},
-			shouldFail:       false,
-		},
-		{
-			structWithValues: Struct1{value1: 1, value2: []int{2, 3, 4}, value3: ""},
-			expectedValues:   []any{1, 2, 3, 4, "test"},
-			shouldFail:       true,
-		},
-		{
-			structWithValues: Struct2{
-				Struct1: Struct1{value1: 1, value2: []int{2, 3, 4}, value3: "test"},
-				value4:  5,
-				value5:  []int{6, 7, 8},
-				value6:  "test",
-			},
-			expectedValues: []any{int64(1), int64(2), int64(3), int64(4), "test", int64(5), int64(6), int64(7), int64(8), "test"},
-			shouldFail:     false,
-		},
-		{
-			structWithValues: Struct2{
-				Struct1: Struct1{value1: 1, value2: []int{2, 3, 4}, value3: "test"},
-				value4:  5,
-				value5:  []int{6, 7, 8},
-				value6:  "test",
-			},
-			expectedValues: []any{1, 2, 3, 4, "test"},
-			shouldFail:     true,
-		},
-		{
-			structWithValues: Struct3{
-				Struct1: Struct1{value1: 1, value2: []int{2, 3, 4}, value3: "test"},
-				WithTags: &types.WithTags{
-					TagIds: []int{1, 2, 3},
+	createDefaultStruct := func() Struct3 {
+		return Struct3{
+			Struct2: Struct2{
+				Struct1: Struct1{
+					value1: 1,
+					value2: []int{2, 3, 4},
+					value3: "value 5",
 				},
+				value4: 6,
+				value5: []int{7, 8, 9},
+				value6: "value 10",
 			},
-			expectedValues: []any{int64(1), int64(2), int64(3), int64(4), "test", int64(1), int64(2), int64(3)},
-			shouldFail:     false,
-		},
-		{
-			structWithValues: Struct3{
-				Struct1:  Struct1{value1: 1, value2: []int{2, 3, 4}, value3: "test"},
-				WithTags: nil,
+			WithTags: &types.WithTags{
+				TagIds: []int{11, 12, 13, 14},
 			},
-			expectedValues: []any{int64(1), int64(2), int64(3), int64(4), "test"},
-			shouldFail:     false,
-		},
+		}
 	}
 
-	printSlices := func(expectedValues []any, generatedValues []any) {
-		t.Logf("expected values  %v\n", expectedValues)
-		t.Logf("generated values %v\n", generatedValues)
-	}
-
-	compareSlices := func(expectedValues []any, generatedValues []any) error {
-		if len(expectedValues) != len(generatedValues) {
-			return fmt.Errorf("slices are not of same length")
+	createAndCheckSlices := func(tagValue string, expected []any) (bool, []any, []any) {
+		values1 := GetValuesFromBody(createDefaultStruct(), tagValue, []any{})
+		if !reflect.DeepEqual(values1, expected) {
+			return false, values1, expected
 		}
 
-		for i := 0; i < len(expectedValues); i++ {
-			expectedType := reflect.TypeOf(expectedValues[i])
-			generatedType := reflect.TypeOf(generatedValues[i])
+		prepend := []any{1, 2, 3}
+		values2 := GetValuesFromBody(createDefaultStruct(), tagValue, prepend)
+		prepend = append(prepend, expected...)
+		if !reflect.DeepEqual(values2, prepend) {
+			return false, values2, prepend
+		}
 
-			if expectedType != generatedType {
-				return fmt.Errorf("expected and generated values are not of equal type at index %d\nexpected type:  %s\ngenerated type: %s",
-					i, expectedType.String(), generatedType.String())
-			}
+		return true, nil, nil
+	}
 
-			if !reflect.DeepEqual(expectedValues[i], generatedValues[i]) {
-				return fmt.Errorf("expected and generated values are not of equal in value at index %d ", i)
+	convertSliceIntegers := func(slice []any) []any {
+		for index, value := range slice {
+			t := reflect.TypeOf(value)
+			v := reflect.ValueOf(value)
+			if kind := t.Kind(); kind >= 2 && kind <= 11 {
+				slice[index] = v.Int()
 			}
 		}
 
-		return nil
+		return slice
 	}
 
-	for i, tc := range testCases {
-		values := GetValuesFromBody(tc.structWithValues, []any{})
-		if err := compareSlices(tc.expectedValues, values); (err != nil) && !tc.shouldFail {
-			printSlices(tc.expectedValues, values)
-			t.Errorf(
-				"GetValuesFromBody() failed for test case with index %d, should fail: %t\nerror: %s",
-				i, tc.shouldFail, err.Error())
-			break
+	t.Run("with empty body", func(t *testing.T) {
+		expected := convertSliceIntegers([]any{1, 2, 3, 4, "value 5", 6, 7, 8, 9, "value 10", 11, 12, 13, 14})
+		if ok, generated, expected := createAndCheckSlices("", expected); !ok {
+			t.Fatalf("expected and generated values are not equal\nexpected:  %v\ngenerated: %v", expected, generated)
 		}
+	})
+
+	t.Run("with select body", func(t *testing.T) {
+		expected := convertSliceIntegers([]any{1, 2, 3, 4, 7, 8, 9, 11, 12, 13, 14})
+		if ok, generated, expected := createAndCheckSlices("create", expected); !ok {
+			t.Fatalf("expected and generated values are not equal\nexpected:  %v\ngenerated: %v", expected, generated)
+		}
+	})
+
+	t.Run("with create body", func(t *testing.T) {
+		expected := convertSliceIntegers([]any{1, 2, 3, 4, 7, 8, 9, 11, 12, 13, 14})
+		if ok, generated, expected := createAndCheckSlices("create", expected); !ok {
+			t.Fatalf("expected and generated values are not equal\nexpected:  %v\ngenerated: %v", expected, generated)
+		}
+	})
+
+	t.Run("with update body", func(t *testing.T) {
+		expected := convertSliceIntegers([]any{2, 3, 4, "value 5", "value 10"})
+		if ok, generated, expected := createAndCheckSlices("update", expected); !ok {
+			t.Fatalf("expected and generated values are not equal\nexpected:  %v\ngenerated: %v", expected, generated)
+		}
+	})
+
+	type TestCase struct {
+		expectedValues [][]any
 	}
+
+	t.Run("tag", func(t *testing.T) {
+		tagValues := []string{"", "create", "update"}
+		testCase := TestCase{
+			expectedValues: [][]any{
+				{0, "label", "color1"},
+				{"label", "color1"},
+				{"label", "color1"},
+			},
+		}
+
+		tag := types.CreateTag(123, "label", "color1")
+		for i, expectedValues := range testCase.expectedValues {
+			expected := convertSliceIntegers(expectedValues)
+			generated := GetValuesFromBody(tag, tagValues[i], []any{})
+			if !reflect.DeepEqual(generated, expected) {
+				t.Fatalf("expected and generated values are not equal for tag value \"%v\"\nexpected:  %v\ngenerated: %v", tagValues[i], expected, generated)
+			}
+		}
+	})
 }

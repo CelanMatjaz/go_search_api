@@ -41,7 +41,7 @@ func (s GenericStore[T]) CreateSingle(accountId int, body T) (T, error) {
 	return WithTransactionScan(
 		s.db, getRecord, s.scan,
 		s.queries.createSingle,
-		accountId, utils.GetValuesFromBody(body, []any{}),
+		accountId, utils.GetValuesFromBody(body, "create", []any{}),
 	)
 }
 
@@ -49,7 +49,7 @@ func (s GenericStore[T]) UpdateSingle(accountId int, id int, body T) (T, error) 
 	return WithTransactionScan(
 		s.db, getRecord, s.scan,
 		s.queries.updateSingle,
-		utils.GetValuesFromBody(body, []any{id, accountId}),
+		utils.GetValuesFromBody(body, "update", []any{id, accountId}),
 	)
 }
 

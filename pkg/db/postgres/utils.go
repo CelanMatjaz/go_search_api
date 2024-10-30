@@ -8,61 +8,73 @@ import (
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
 )
 
-func GetDbFields[T any]() []string {
+func GetDbFieldsSelect[T any]() []string {
 	var val T
 	v := reflect.ValueOf(&val).Elem()
-	return getDbTagValues(v, false, "")
+	return getDbTagFields(v, "select")
 }
 
 func GetDbFieldsForCreate[T any]() []string {
 	var val T
 	v := reflect.ValueOf(&val).Elem()
-	return getDbTagValues(v, true, "body")
+	return getDbTagFields(v, "create")
 }
 
 func GetDbFieldsForUpdate[T any]() []string {
 	var val T
 	v := reflect.ValueOf(&val).Elem()
-	return getDbTagValues(v, false, "body")
+	return getDbTagFields(v, "update")
 }
 
-func getDbTagValues(value reflect.Value, omit bool, checkForTag string) []string {
+func getDbTagFields(value reflect.Value, bodyTagValue string) []string {
+	if bodyTagValue == "" {
+		panic("Body tag value should not be an empty string")
+	}
+
 	fields := make([]string, 0)
 
 	for i := 0; i < value.NumField(); i++ {
 		field := value.Field(i)
 		fieldType := value.Type().Field(i)
 
-		tag, ok := fieldType.Tag.Lookup("db")
+		dbTag, ok := fieldType.Tag.Lookup("db")
 		if field.Kind() == reflect.Struct && !ok {
-			fields = append(fields, getDbTagValues(field, omit, checkForTag)...)
+			fields = append(fields, getDbTagFields(field, bodyTagValue)...)
 			continue
 		}
 
-		if checkForTag != "" {
-			_, ok := fieldType.Tag.Lookup(checkForTag)
-			if !ok {
-				continue
-			}
-		}
-
-		if !ok || tag == "" || (omit && (strings.Contains("id created_at updated_at", tag))) {
+		if dbTag == "" {
 			continue
 		}
 
-		fields = append(fields, tag)
+		bodyTag := fieldType.Tag.Get("body")
+		if bodyTagValue == "select" {
+			goto append
+		}
+
+		if bodyTag == "omit" {
+			continue
+		} else if bodyTag != "" && !strings.Contains(bodyTag, bodyTagValue) {
+			continue
+		}
+
+	append:
+		fields = append(fields, dbTag)
 	}
 
 	return fields
 }
 
 func GetScanFields[T any](val *T) []any {
-	v := reflect.ValueOf(val).Elem()
-
 	if reflect.TypeOf(*val).Kind() != reflect.Struct {
 		panic("invalid type provided")
 	}
 
+	v := reflect.ValueOf(val).Elem()
+	return getScanFields(v)
+}
+
+func getScanFields(v reflect.Value) []any {
 	fields := make([]any, 0)
 	for i := range v.NumField() {
 		field := v.Field(i)
@@ -78,15 +90,7 @@ func GetScanFields[T any](val *T) []any {
 			continue
 		}
 
-		for j := range field.NumField() {
-			embeddedField := field.Field(j)
-			embeddedFieldType := field.Type().Field(j)
-
-			embeddedTag := embeddedFieldType.Tag.Get("db")
-			if embeddedTag != "" && embeddedField.CanAddr() {
-				fields = append(fields, embeddedField.Addr().Interface())
-			}
-		}
+		fields = append(fields, getScanFields(field)...)
 	}
 
 	return fields
@@ -103,22 +107,6 @@ func createScanFunc[T any]() func(scannable db.Scannable) (T, error) {
 		return temp, nil
 	}
 }
-
-// func createScanWithTagsFunc[T any]() func(scannable db.Scannable) (*T, types.Tag, error) {
-// 	var temp T
-// 	fields := getScanFields(&temp)
-//
-// 	var tempTag types.ScanTag
-// 	fields = append(fields, getScanFields(&tempTag)...)
-//
-// 	return func(scannable db.Scannable) (*T, types.Tag, error) {
-// 		if err := scannable.Scan(fields...); err != nil {
-// 			return &temp, tempTag.Tag(), err
-// 		}
-//
-// 		return &temp, tempTag.Tag(), nil
-// 	}
-// }
 
 // ???
 func WithTransaction(

@@ -108,7 +108,7 @@ func SingleRecordQuery[T any](recordTable string) string {
 
 	return execQueryTemplate(tmpl, BasicQueryData{
 		RecordTable: recordTable,
-		Fields:      GetDbFields[T](),
+		Fields:      GetDbFieldsSelect[T](),
 	})
 }
 
@@ -127,7 +127,7 @@ func ManyRecordsQuery[T any](recordTable string, addPagination bool) string {
 
 	return execQueryTemplate(tmpl, Data{
 		RecordTable: recordTable,
-		Fields:      GetDbFields[T](),
+		Fields:      GetDbFieldsSelect[T](),
 		Pagination:  addPagination,
 	})
 }
@@ -194,9 +194,9 @@ func ManyRecordsWithTagsQuery[T any](recordTable string, mtmTable string) string
 	return execQueryTemplate(tmpl, Data{
 		BasicQueryData: BasicQueryData{
 			RecordTable: recordTable,
-			Fields:      GetDbFields[T](),
+			Fields:      GetDbFieldsSelect[T](),
 		},
-		TagFields: GetDbFields[types.Tag](),
+		TagFields: GetDbFieldsSelect[types.Tag](),
 		MtmTable:  mtmTable,
 	})
 }
@@ -269,6 +269,6 @@ func createTagJoinQuery(mtmTable string) string {
 
 	return execQueryTemplate(tmpl, Data{
 		MtmTable: mtmTable,
-		Fields:   GetDbFields[types.Tag](),
+		Fields:   GetDbFieldsSelect[types.Tag](),
 	})
 }

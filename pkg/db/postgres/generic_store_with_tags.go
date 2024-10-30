@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
@@ -45,7 +46,9 @@ func (s GenericStoreWithTags[T]) CreateSingle(accountId int, body T) (T, error) 
 	}
 
 	query := s.queries.createWithTags(body.GetTagCount())
-	row := tx.QueryRow(query, utils.GetValuesFromBody(body, []any{accountId})...)
+	fmt.Printf("%s\n", query)
+    fmt.Printf("values: %v\n", utils.GetValuesFromBody(body, "create", []any{accountId}))
+	row := tx.QueryRow(query, utils.GetValuesFromBody(body, "create", []any{accountId})...)
 	value, err = s.scan(row)
 	if err != nil {
 		return value, err
@@ -63,7 +66,7 @@ func (s GenericStoreWithTags[T]) UpdateSingle(accountId int, recordId int, body 
 	return WithTransactionScan(
 		s.db, getRecord, s.scan,
 		s.queries.updateSingle,
-		utils.GetValuesFromBody(body, []any{recordId, accountId})...,
+		utils.GetValuesFromBody(body, "update", []any{recordId, accountId})...,
 	)
 }
 

@@ -7,7 +7,7 @@ import (
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
 )
 
-func TestGenericStore(t *testing.T) {
+func TestGenericStoreWithTags(t *testing.T) {
 	db, conn := createDbAndStore()
 	t.Cleanup(func() {
 		cleanupDb(db)
@@ -16,7 +16,7 @@ func TestGenericStore(t *testing.T) {
 	store := postgres.CreatePostgresStore(conn.Db)
 	account := seedAccount(t, store)
 
-	_, err := store.CreateResumeSection(account.Id, types.ResumeSection{
+	_, err := store.ResumeSections.CreateSingle(account.Id, types.ResumeSection{
 		Label:    "label",
 		Text:     "text",
 		WithTags: &types.WithTags{},
@@ -30,12 +30,13 @@ func TestGenericStore(t *testing.T) {
 		t.Fatalf("could not query resume sections, %s", err.Error())
 	}
 
+	for _, s := range sections {
+		t.Logf("%v\n", s)
+	}
+
 	if len(sections) == 0 {
 		t.Errorf("no sections found")
 	}
 
-	// for i, s := range sections {
-	// 	t.Errorf("%d %v", i, s)
-	// }
-
+	// t.Fatal()
 }

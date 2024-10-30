@@ -11,14 +11,13 @@ import (
 )
 
 type TestQueryType struct {
-	Id         string `body:"" db:"id"`
-	AccountId  string `body:"" db:"account_id"`
-	TestField1 string `body:"" db:"test_field1"`
-	TestField2 string `body:"" db:"test_field2"`
-	TestField3 string `body:"" db:""`
+	types.WithId
+	types.WithAccountId
+	TestField1 string `body:"create,update" db:"test_field1"`
+	TestField2 string `body:"create,update" db:"test_field2"`
+	TestField3 string `db:""`
 	TestField4 string `db:""`
-	CreatedAt  string `body:"" db:"created_at"`
-	UpdatedAt  string `body:"" db:"updated_at"`
+	types.WithTimestamps
 }
 
 type QueryTestCase struct {
@@ -54,7 +53,7 @@ func testSpecificQueries(fnName string, testCases []SpecificTypeQueryTestCase, t
 	t.Log("testing for specific types")
 	for i, tc := range testCases {
 		if utils.TrimInside(tc.generatedQuery) != utils.TrimInside(tc.expectedQuery) {
-			t.Fatalf("%s failed for specific type test case with index %d\n\tqueries\n\texpected:  %s\n\tgenerated: %s",
+			t.Fatalf("%s failed for specific type test case with index %d\nqueries\nexpected:  %s\ngenerated: %s",
 				fnName, i, tc.expectedQuery, tc.generatedQuery,
 			)
 		}
@@ -179,19 +178,19 @@ func TestUpdateRecordQuery(t *testing.T) {
 			postgres.UpdateRecordQuery[types.Tag](postgres.TagsTable),
 		),
 		specificTestCase(
-			"UPDATE application_presets SET label = $3 WHERE id = $1 AND account_id = $2 RETURNING *",
+			"UPDATE application_presets SET label = $3, updated_at = DEFAULT WHERE id = $1 AND account_id = $2 RETURNING *",
 			postgres.UpdateRecordQuery[types.ApplicationPreset](postgres.ApplicationPresetsTable),
 		),
 		specificTestCase(
-			"UPDATE application_sections SET label = $3, text = $4 WHERE id = $1 AND account_id = $2 RETURNING *",
+			"UPDATE application_sections SET label = $3, text = $4, updated_at = DEFAULT WHERE id = $1 AND account_id = $2 RETURNING *",
 			postgres.UpdateRecordQuery[types.ApplicationSection](postgres.ApplicationSectionsTable),
 		),
 		specificTestCase(
-			"UPDATE resume_presets SET label = $3 WHERE id = $1 AND account_id = $2 RETURNING *",
+			"UPDATE resume_presets SET label = $3, updated_at = DEFAULT WHERE id = $1 AND account_id = $2 RETURNING *",
 			postgres.UpdateRecordQuery[types.ResumePreset](postgres.ResumePresetsTable),
 		),
 		specificTestCase(
-			"UPDATE resume_sections SET label = $3, text = $4 WHERE id = $1 AND account_id = $2 RETURNING *",
+			"UPDATE resume_sections SET label = $3, text = $4, updated_at = DEFAULT WHERE id = $1 AND account_id = $2 RETURNING *",
 			postgres.UpdateRecordQuery[types.ResumeSection](postgres.ResumeSectionsTable),
 		),
 	)
