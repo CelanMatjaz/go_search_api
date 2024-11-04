@@ -23,7 +23,7 @@ test-verbose:
 	go test ./pkg/... -v
 
 test-docker: 
-	docker build -t testing . -f test.Dockerfile
+	docker-compose -f test.docker-compose.yml up
 
 format:
  	$('go fmt ./pkg/...')
