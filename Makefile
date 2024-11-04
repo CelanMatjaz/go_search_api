@@ -22,5 +22,8 @@ test:
 test-verbose:
 	go test ./pkg/... -v
 
+test-docker: 
+	docker build -t testing . -f test.Dockerfile
+
 format:
  	$('go fmt ./pkg/...')

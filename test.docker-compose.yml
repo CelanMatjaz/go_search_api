@@ -1,0 +1,12 @@
+services:
+  testing:
+    container_name: testing.local
+    hostname: testing
+    build:
+      context: .
+      dockerfile: test.Dockerfile
+    env_file:
+    - path: test.env
+      required: true
+    volumes:
+      - ./:/testing_user
