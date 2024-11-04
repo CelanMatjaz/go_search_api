@@ -26,11 +26,11 @@ func (h *TagHandler) AddRoutes(r chi.Router) {
 		r.Get("/resume-presets/{id}", CreateHandler(createGetManyTagsFromTableHandler(h.store.GetResumePresetTags)))
 		r.Get("/resume-sections/{id}", CreateHandler(createGetManyTagsFromTableHandler(h.store.GetResumeSectionTags)))
 
-		r.Get("/", CreateHandler(createGenericGetManyHandler(h.store.GetTags, sendTags)))
-		r.Get("/{id}", CreateHandler(createGenericGetSingleHandler(h.store.GetTag, sendTag)))
-		r.Post("/", CreateHandler(createGenericPostHandler(h.store.CreateTag, sendTag)))
-		r.Put("/{id}", CreateHandler(createGenericPutHandler(h.store.UpdateTag, sendTag)))
-		r.Delete("/{id}", CreateHandler(createGenericDeleteHandler(h.store.DeleteTag)))
+		r.Get("/", CreateHandler(CreateGenericGetManyHandler(h.store.GetTags, sendTags)))
+		r.Get("/{id}", CreateHandler(CreateGenericGetSingleHandler(h.store.GetTag, sendTag)))
+		r.Post("/", CreateHandler(CreateGenericPostHandler(h.store.CreateTag, sendTag)))
+		r.Put("/{id}", CreateHandler(CreateGenericPutHandler(h.store.UpdateTag, sendTag)))
+		r.Delete("/{id}", CreateHandler(CreateGenericDeleteHandler(h.store.DeleteTag)))
 	})
 }
 

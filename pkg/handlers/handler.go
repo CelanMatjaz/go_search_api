@@ -19,20 +19,6 @@ func CreateHandler(h HandlerFunc) http.HandlerFunc {
 				log.Println("Internal server error: ", err.Error())
 				utils.SendInternalServerError(w)
 			}
-			return
 		}
 	}
-}
-
-func decodeAndValidateBody[T any](r *http.Request) (T, error) {
-	body, err := utils.DecodeJsonBody[T](r)
-	if err != nil {
-		return body, err
-	}
-
-	if validateErrors := utils.Validate(body); len(validateErrors) > 0 {
-		return body, types.CreateApiError(nil, validateErrors, http.StatusBadRequest)
-	}
-
-	return body, nil
 }

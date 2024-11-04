@@ -20,19 +20,19 @@ func NewApplicationHandler(store db.ApplicationStore) *ApplicationHandler {
 func (h *ApplicationHandler) AddRoutes(r chi.Router) {
 	r.Route("/applications", func(r chi.Router) {
 		r.Route("/presets", func(r chi.Router) {
-			r.Get("/", CreateHandler(createGenericGetManyWithPaginationHandler(h.store.GetApplicationPresets, sendApplicationPresets)))
-			r.Get("/{id}", CreateHandler(createGenericGetSingleHandler(h.store.GetApplicationPreset, sendApplicationPreset)))
-			r.Post("/", CreateHandler(createGenericPostHandler(h.store.CreateApplicationPreset, sendApplicationPreset)))
-			r.Put("/{id}", CreateHandler(createGenericPutHandler(h.store.UpdateApplicationPreset, sendApplicationPreset)))
-			r.Delete("/{id}", CreateHandler(createGenericDeleteHandler(h.store.DeleteApplicationPreset)))
+			r.Get("/", CreateHandler(CreateGenericGetManyWithPaginationHandler(h.store.GetApplicationPresets, sendApplicationPresets)))
+			r.Get("/{id}", CreateHandler(CreateGenericGetSingleHandler(h.store.GetApplicationPreset, sendApplicationPreset)))
+			r.Post("/", CreateHandler(CreateGenericPostHandler(h.store.CreateApplicationPreset, sendApplicationPreset)))
+			r.Put("/{id}", CreateHandler(CreateGenericPutHandler(h.store.UpdateApplicationPreset, sendApplicationPreset)))
+			r.Delete("/{id}", CreateHandler(CreateGenericDeleteHandler(h.store.DeleteApplicationPreset)))
 		})
 
 		r.Route("/sections", func(r chi.Router) {
-			r.Get("/", CreateHandler(createGenericGetManyWithPaginationHandler(h.store.GetApplicationSections, sendApplicationSections)))
-			r.Get("/{id}", CreateHandler(createGenericGetSingleHandler(h.store.GetApplicationSection, sendApplicationSection)))
-			r.Post("/", CreateHandler(createGenericPostHandler(h.store.CreateApplicationSection, sendApplicationSection)))
-			r.Put("/{id}", CreateHandler(createGenericPutHandler(h.store.UpdateApplicationSection, sendApplicationSection)))
-			r.Delete("/{id}", CreateHandler(createGenericDeleteHandler(h.store.DeleteApplicationSection)))
+			r.Get("/", CreateHandler(CreateGenericGetManyWithPaginationHandler(h.store.GetApplicationSections, sendApplicationSections)))
+			r.Get("/{id}", CreateHandler(CreateGenericGetSingleHandler(h.store.GetApplicationSection, sendApplicationSection)))
+			r.Post("/", CreateHandler(CreateGenericPostHandler(h.store.CreateApplicationSection, sendApplicationSection)))
+			r.Put("/{id}", CreateHandler(CreateGenericPutHandler(h.store.UpdateApplicationSection, sendApplicationSection)))
+			r.Delete("/{id}", CreateHandler(CreateGenericDeleteHandler(h.store.DeleteApplicationSection)))
 		})
 	})
 }

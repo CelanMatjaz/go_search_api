@@ -20,19 +20,19 @@ func NewResumeHandler(store db.ResumeStore) *ResumeHandler {
 func (h *ResumeHandler) AddRoutes(r chi.Router) {
 	r.Route("/resumes", func(r chi.Router) {
 		r.Route("/presets", func(r chi.Router) {
-			r.Get("/", CreateHandler(createGenericGetManyWithPaginationHandler(h.store.GetResumePresets, sendResumePresets)))
-			r.Get("/{id}", CreateHandler(createGenericGetSingleHandler(h.store.GetResumePreset, sendResumePreset)))
-			r.Post("/", CreateHandler(createGenericPostHandler(h.store.CreateResumePreset, sendResumePreset)))
-			r.Put("/{id}", CreateHandler(createGenericPutHandler(h.store.UpdateResumePreset, sendResumePreset)))
-			r.Delete("/{id}", CreateHandler(createGenericDeleteHandler(h.store.DeleteResumePreset)))
+			r.Get("/", CreateHandler(CreateGenericGetManyWithPaginationHandler(h.store.GetResumePresets, sendResumePresets)))
+			r.Get("/{id}", CreateHandler(CreateGenericGetSingleHandler(h.store.GetResumePreset, sendResumePreset)))
+			r.Post("/", CreateHandler(CreateGenericPostHandler(h.store.CreateResumePreset, sendResumePreset)))
+			r.Put("/{id}", CreateHandler(CreateGenericPutHandler(h.store.UpdateResumePreset, sendResumePreset)))
+			r.Delete("/{id}", CreateHandler(CreateGenericDeleteHandler(h.store.DeleteResumePreset)))
 		})
 
 		r.Route("/sections", func(r chi.Router) {
-			r.Get("/", CreateHandler(createGenericGetManyWithPaginationHandler(h.store.GetResumeSections, sendResumeSections)))
-			r.Get("/{id}", CreateHandler(createGenericGetSingleHandler(h.store.GetResumeSection, sendResumeSection)))
-			r.Post("/", CreateHandler(createGenericPostHandler(h.store.CreateResumeSection, sendResumeSection)))
-			r.Put("/{id}", CreateHandler(createGenericPutHandler(h.store.UpdateResumeSection, sendResumeSection)))
-			r.Delete("/{id}", CreateHandler(createGenericDeleteHandler(h.store.DeleteResumeSection)))
+			r.Get("/", CreateHandler(CreateGenericGetManyWithPaginationHandler(h.store.GetResumeSections, sendResumeSections)))
+			r.Get("/{id}", CreateHandler(CreateGenericGetSingleHandler(h.store.GetResumeSection, sendResumeSection)))
+			r.Post("/", CreateHandler(CreateGenericPostHandler(h.store.CreateResumeSection, sendResumeSection)))
+			r.Put("/{id}", CreateHandler(CreateGenericPutHandler(h.store.UpdateResumeSection, sendResumeSection)))
+			r.Delete("/{id}", CreateHandler(CreateGenericDeleteHandler(h.store.DeleteResumeSection)))
 		})
 	})
 }

@@ -14,7 +14,7 @@ func main() {
 
 	store := postgres.NewPostgresStore(connectionString)
 	server := api.CreateServer(port, store)
-	err := server.Start()
+	err := api.StartServer(server)
 	if err != nil {
 		log.Fatal(err)
 	}

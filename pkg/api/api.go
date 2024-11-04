@@ -24,7 +24,20 @@ func CreateServer(port string, store db.Store) *Server {
 	}
 }
 
-func (s *Server) Start() error {
+func StartServer(s *Server) error {
+	server := http.Server{
+		Addr:    fmt.Sprintf("0.0.0.0:%s", s.port),
+		Handler: CreateHandler(s),
+	}
+
+	fmt.Printf("Starting server on port %s\n", s.port)
+
+	server.ListenAndServe()
+
+	return nil
+}
+
+func CreateHandler(s *Server) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(chiMiddleware.StripSlashes)
@@ -54,14 +67,5 @@ func (s *Server) Start() error {
 		})
 	})
 
-	server := http.Server{
-		Addr:    fmt.Sprintf("0.0.0.0:%s", s.port),
-		Handler: r,
-	}
-
-	fmt.Printf("Starting server on port %s\n", s.port)
-
-	server.ListenAndServe()
-
-	return nil
+	return r
 }

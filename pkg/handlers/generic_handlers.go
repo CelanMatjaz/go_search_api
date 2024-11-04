@@ -9,7 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func createGenericGetManyHandler[T any](
+func CreateGenericGetManyHandler[T any](
 	get func(int) ([]T, error),
 	sendJson func(w http.ResponseWriter, data []T) error,
 ) HandlerFunc {
@@ -28,7 +28,7 @@ func createGenericGetManyHandler[T any](
 	}
 }
 
-func createGenericGetManyWithPaginationHandler[T any](
+func CreateGenericGetManyWithPaginationHandler[T any](
 	get func(int, types.PaginationParams) ([]T, error),
 	sendJson func(w http.ResponseWriter, data []T) error,
 ) HandlerFunc {
@@ -48,7 +48,7 @@ func createGenericGetManyWithPaginationHandler[T any](
 	}
 }
 
-func createGenericGetSingleHandler[T any](
+func CreateGenericGetSingleHandler[T any](
 	get func(int, int) (T, error),
 	sendJson func(w http.ResponseWriter, data T) error,
 ) HandlerFunc {
@@ -73,7 +73,7 @@ func createGenericGetSingleHandler[T any](
 	}
 }
 
-func createGenericPostHandler[T any](
+func CreateGenericPostHandler[T any](
 	create func(int, T) (T, error),
 	sendJson func(w http.ResponseWriter, data T) error,
 ) HandlerFunc {
@@ -97,7 +97,7 @@ func createGenericPostHandler[T any](
 	}
 }
 
-func createGenericPutHandler[T any](
+func CreateGenericPutHandler[T any](
 	update func(int, int, T) (T, error),
 	sendJson func(w http.ResponseWriter, data T) error,
 ) HandlerFunc {
@@ -127,7 +127,7 @@ func createGenericPutHandler[T any](
 	}
 }
 
-func createGenericDeleteHandler(
+func CreateGenericDeleteHandler(
 	delete func(int, int) error,
 ) HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {

@@ -63,7 +63,7 @@ func (h *AuthHandler) handleRegister(w http.ResponseWriter, r *http.Request) err
 func (h *AuthHandler) handleLogin(w http.ResponseWriter, r *http.Request) error {
 	body, err := decodeAndValidateBody[types.LoginBody](r)
 	if err != nil {
-		return types.UnparsableJsonBody
+		return err
 	}
 
 	existingAccount, exists, err := h.store.GetAccountByEmail(body.Email)
