@@ -8,15 +8,14 @@ import (
 	"testing"
 
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db/postgres"
+	testcommon "github.com/CelanMatjaz/job_application_tracker_api/pkg/test_common"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
 )
 
 func TestTags(t *testing.T) {
-	db, conn := createDbAndStore()
-	defer cleanupDb(db)
-
+	conn := testcommon.CreateStore(t)
 	store := postgres.CreatePostgresStore(conn.Db)
-	account := seedAccount(t, store)
+	account, _ := testcommon.SeedAccount(t, store)
 
 	createdTags, _ := createTags(t, store, account.Id)
 
@@ -63,13 +62,10 @@ func TestTags(t *testing.T) {
 }
 
 func TestTagAssociations(t *testing.T) {
-	db, conn := createDbAndStore()
-	t.Cleanup(func() {
-		cleanupDb(db)
-	})
+	conn := testcommon.CreateStore(t)
 
 	store := postgres.CreatePostgresStore(conn.Db)
-	account := seedAccount(t, store)
+	account, _ := testcommon.SeedAccount(t, store)
 
 	_, tagIds := createTags(t, store, account.Id)
 	createdRecords := make([]types.ResumePreset, 0)

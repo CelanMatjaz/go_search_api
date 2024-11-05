@@ -4,17 +4,15 @@ import (
 	"testing"
 
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db/postgres"
+	testcommon "github.com/CelanMatjaz/job_application_tracker_api/pkg/test_common"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
 )
 
 func TestGenericStoreWithTags(t *testing.T) {
-	db, conn := createDbAndStore()
-	t.Cleanup(func() {
-		cleanupDb(db)
-	})
+	conn := testcommon.CreateStore(t)
 
 	store := postgres.CreatePostgresStore(conn.Db)
-	account := seedAccount(t, store)
+	account, _ := testcommon.SeedAccount(t, store)
 
 	_, err := store.ResumeSections.CreateSingle(account.Id, types.ResumeSection{
 		Label:    "label",

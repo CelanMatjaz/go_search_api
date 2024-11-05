@@ -104,7 +104,7 @@ func getMigrationsDir() (string, error) {
 	return "", os.ErrNotExist
 }
 
-func CreateOAuthClient(t *testing.T, store *postgres.PostgresStore) {
+func CreateOAuthClient(t *testing.T, store *postgres.PostgresStore) types.OAuthClient {
 	query := postgres.CreateRecordQuery[types.OAuthClient]("oauth_clients")
 	row := store.Db.QueryRow(query,
 		os.Getenv("OAUTH_CLIENT_NAME"),
@@ -119,4 +119,6 @@ func CreateOAuthClient(t *testing.T, store *postgres.PostgresStore) {
 	var client types.OAuthClient
 	err := row.Scan(postgres.GetScanFields(&client)...)
 	AssertError(t, err, "could not create oauth client for testing")
+
+    return client
 }
