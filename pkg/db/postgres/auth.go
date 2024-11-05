@@ -65,10 +65,11 @@ func (s *PostgresStore) CreateAccountWithOAuth(account types.Account, tokenRespo
             accounts.id, 
             accounts.display_name,
             accounts.email,
-            NULL password_hash,
             accounts.refresh_token_version,
+            accounts.is_oauth,
             accounts.created_at,
-            accounts.updated_at`,
+            accounts.updated_at,
+            NULL password_hash`,
 		account.DisplayName,
 		account.Email,
 	)
@@ -81,10 +82,10 @@ func (s *PostgresStore) CreateAccountWithOAuth(account types.Account, tokenRespo
 	return acc, err
 }
 
-func (s *PostgresStore) createAccountOAuthData(accountId int, oautClientId int, tokenResponse types.TokenResponse) error {
+func (s *PostgresStore) createAccountOAuthData(accountId int, oauthClientId int, tokenResponse types.TokenResponse) error {
 	_, err := s.Db.Exec(
 		"INSERT INTO account_oauth_data (account_id, oauth_client_id, access_token, refresh_token) VALUES ($1, $2, $3, $4)",
-		accountId, oautClientId, tokenResponse.AccessToken, tokenResponse.RefreshToken,
+		accountId, oauthClientId, tokenResponse.AccessToken, tokenResponse.RefreshToken,
 	)
 	if err != nil {
 		return err
