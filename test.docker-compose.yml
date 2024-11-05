@@ -2,11 +2,24 @@ services:
   testing:
     container_name: testing.local
     hostname: testing
+    depends_on:
+      - database
     build:
       context: .
       dockerfile: test.Dockerfile
     env_file:
-    - path: test.env
-      required: true
+      - path: test.env
+        required: true
     volumes:
       - ./:/testing_user
+
+  database:
+    image: postgres
+    container_name: testing.local.db    
+    environment:
+      PGPORT: 54321
+    env_file:
+      - path: test.env
+        required: true
+    ports: 
+      - 54321:54321

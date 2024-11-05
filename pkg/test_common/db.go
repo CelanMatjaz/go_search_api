@@ -1,7 +1,6 @@
 package testcommon
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
 	"os"
@@ -10,7 +9,6 @@ import (
 
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db/postgres"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
-	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
 	"github.com/golang-migrate/migrate/v4"
 	pg "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -18,32 +16,39 @@ import (
 )
 
 func CreateStore(t *testing.T) *postgres.PostgresStore {
-	logger := &bytes.Buffer{}
-	database := embeddedpostgres.NewDatabase(
-		embeddedpostgres.DefaultConfig().
-			Port(54321).Logger(logger),
-	)
-	err := database.Start()
+	store := postgres.NewPostgresStore(os.Getenv("CONNECTION_STRING_CONTAINER"))
 	t.Cleanup(func() {
-		CleanupDb(database)
+		CleanupStore(store)
 	})
-	if err != nil {
-		panic(fmt.Sprintf("could not create database for testing, %s", err.Error()))
-	}
 
-	connectionString := "host=localhost port=54321 user=postgres password=postgres dbname=postgres sslmode=disable"
-	MigrateUp(connectionString)
+	// https://stackoverflow.com/a/2829485
+	_, err := store.Db.Exec(`
+        CREATE OR REPLACE FUNCTION truncate_tables(username IN VARCHAR) RETURNS void AS $$
+        DECLARE
+            statements CURSOR FOR
+                SELECT tablename FROM pg_tables
+                WHERE tableowner = username AND schemaname = 'public';
+        BEGIN
+            FOR stmt IN statements LOOP
+                EXECUTE 'TRUNCATE TABLE ' || quote_ident(stmt.tablename) || ' CASCADE;';
+            END LOOP;
+        END;
+        $$ LANGUAGE plpgsql;`)
+	if err != nil {
+		panic(err)
+	}
 
 	if val := recover(); val != nil {
 		t.Fatalf("%v", val)
 	}
 
-	return postgres.NewPostgresStore(connectionString)
+	return store
 }
 
-func CleanupDb(db *embeddedpostgres.EmbeddedPostgres) {
-	if err := db.Stop(); err != nil {
-		panic(err.Error())
+func CleanupStore(s *postgres.PostgresStore) {
+	s.Db.Exec("SELECT truncate_tables('postgres')")
+	if err := s.Db.Close(); err != nil {
+		panic(err)
 	}
 }
 
@@ -120,5 +125,5 @@ func CreateOAuthClient(t *testing.T, store *postgres.PostgresStore) types.OAuthC
 	err := row.Scan(postgres.GetScanFields(&client)...)
 	AssertError(t, err, "could not create oauth client for testing")
 
-    return client
+	return client
 }

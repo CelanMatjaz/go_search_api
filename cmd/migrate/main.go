@@ -17,11 +17,19 @@ import (
 )
 
 func main() {
+	envFile := flag.String("env", "local.env", "env file")
+	flag.Parse()
+
+	upCmd := flag.NewFlagSet("up", flag.ExitOnError)
+	downCmd := flag.NewFlagSet("down", flag.ExitOnError)
+	resetCmd := flag.NewFlagSet("reset", flag.ExitOnError)
+
 	if len(os.Args) < 2 {
 		log.Fatal("Provide a subcommand, either of 'up', 'down' or 'reset'")
 	}
 
-	envFile := flag.String("env", "local.env", "env file")
+	flag.Parse()
+
 	godotenv.Load(*envFile)
 	connectionString := os.Getenv("CONNECTION_STRING")
 
@@ -41,26 +49,29 @@ func main() {
 		panic(err)
 	}
 
-	switch os.Args[1] {
+	switch flag.Args()[0] {
 	case "up":
+		upCmd.Parse(os.Args[2:])
 		if err := migration.Up(); err != nil {
 			log.Fatalf("Could not migrate up, %s", err.Error())
 		}
 		break
 
 	case "down":
+		downCmd.Parse(os.Args[2:])
 		if err := migration.Down(); err != nil {
 			log.Fatalf("Could not migrate down, %s", err.Error())
 		}
 		break
 
 	case "reset":
+		resetCmd.Parse(os.Args[2:])
 		if err := migration.Drop(); err != nil {
 			log.Fatalf("Could not drop db, %s", err.Error())
 		}
 		break
 
 	default:
-		log.Fatal("Only subcommands 'up', 'down' and 'reset' supported")
+		log.Fatalf("Only subcommands 'up', 'down' and 'reset' supported, command '%s' provided", flag.Args()[0])
 	}
 }
