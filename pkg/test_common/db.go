@@ -45,8 +45,15 @@ func CreateStore(t *testing.T) *postgres.PostgresStore {
 	return store
 }
 
+func ResetTables(s *postgres.PostgresStore) {
+	_, err := s.Db.Exec("SELECT truncate_tables('postgres')")
+	if err != nil {
+		panic(err)
+	}
+}
+
 func CleanupStore(s *postgres.PostgresStore) {
-	s.Db.Exec("SELECT truncate_tables('postgres')")
+	ResetTables(s)
 	if err := s.Db.Close(); err != nil {
 		panic(err)
 	}
