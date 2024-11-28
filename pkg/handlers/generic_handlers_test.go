@@ -9,6 +9,7 @@ import (
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/middleware"
 	testcommon "github.com/CelanMatjaz/job_application_tracker_api/pkg/test_common"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
+	"github.com/go-chi/chi/v5"
 )
 
 func dummySendJson(_ http.ResponseWriter, _ []int) error {
@@ -23,6 +24,12 @@ func addId(req *http.Request) *http.Request {
 func addContextValue(req *http.Request, key any, value any) *http.Request {
 	ctx := context.WithValue(req.Context(), key, value)
 	return req.WithContext(ctx)
+}
+
+func addPathParam(req *http.Request, key string, value string) *http.Request {
+	ctx := chi.NewRouteContext()
+	ctx.URLParams.Add(key, value)
+	return req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, ctx))
 }
 
 func TestCreateGenericGetManyHandler(t *testing.T) {
@@ -72,16 +79,16 @@ func TestCreateGenericGetSingleHandler(t *testing.T) {
 		testcommon.AssertError(t, err, types.Unauthenticated)
 	})
 
-	t.Run("test with id without param", func(t *testing.T) {
+	t.Run("test with id without path param", func(t *testing.T) {
 		res, req := newRequestAndRecorder(t, http.MethodGet, "/", nil)
 		err := handler(res, addId(req))
 		testcommon.AssertError(t, err, types.InvalidPathParam)
 	})
 
 	t.Run("test with id with param", func(t *testing.T) {
-		// res, req := newRequestAndRecorder(t, http.MethodPost, "/", nil)
-		// err := handler(res, addId(addContextValue(req, "id", 1)))
-		// testcommon.AssertNotError(t, err, "")
+		res, req := newRequestAndRecorder(t, http.MethodPost, "/", nil)
+		err := handler(res, addPathParam(addId(req), "id", "1"))
+		testcommon.AssertNotError(t, err, "")
 	})
 }
 
@@ -102,19 +109,19 @@ func TestCreateGenericPostHandler(t *testing.T) {
 
 	t.Run("test with id without body", func(t *testing.T) {
 		res, req := newRequestAndRecorder(t, http.MethodPost, "/", nil)
-		err := handler(res, addId(req))
+		err := handler(res, addPathParam(addId(req), "id", "1"))
 		testcommon.AssertError(t, err, types.InvalidJsonBody)
 	})
 
 	t.Run("test with id with invalid body", func(t *testing.T) {
 		res, req := newRequestAndRecorder(t, http.MethodPost, "/", GenericBody{})
-		err := handler(res, addId(req))
+		err := handler(res, addPathParam(addId(req), "id", "1"))
 		testcommon.AssertError(t, err, types.InvalidJsonBody)
 	})
 
 	t.Run("test with id with valid body", func(t *testing.T) {
 		res, req := newRequestAndRecorder(t, http.MethodPost, "/", GenericBody{Value: "test"})
-		err := handler(res, addId(req))
+		err := handler(res, addPathParam(addId(req), "id", "1"))
 		testcommon.AssertNotError(t, err, "")
 	})
 }
@@ -134,22 +141,28 @@ func TestCreateGenericPutHandler(t *testing.T) {
 		testcommon.AssertError(t, err, types.Unauthenticated)
 	})
 
+	t.Run("test with id without path param", func(t *testing.T) {
+		res, req := newRequestAndRecorder(t, http.MethodPost, "/", nil)
+		err := handler(res, addId(req))
+		testcommon.AssertError(t, err, types.InvalidPathParam)
+	})
+
 	t.Run("test with id without body", func(t *testing.T) {
-		// res, req := newRequestAndRecorder(t, http.MethodPost, "/", nil)
-		// err := handler(res, addId(req))
-		// testcommon.AssertError(t, err, types.InvalidJsonBody)
+		res, req := newRequestAndRecorder(t, http.MethodPost, "/", nil)
+		err := handler(res, addPathParam(addId(req), "id", "1"))
+		testcommon.AssertError(t, err, types.InvalidJsonBody)
 	})
 
 	t.Run("test with id with invalid body", func(t *testing.T) {
-		// res, req := newRequestAndRecorder(t, http.MethodPost, "/", GenericBody{})
-		// err := handler(res, addId(req))
-		// testcommon.AssertError(t, err, types.InvalidJsonBody)
+		res, req := newRequestAndRecorder(t, http.MethodPost, "/", GenericBody{})
+		err := handler(res, addPathParam(addId(req), "id", "1"))
+		testcommon.AssertError(t, err, types.InvalidJsonBody)
 	})
 
 	t.Run("test with id with valid body", func(t *testing.T) {
-		// res, req := newRequestAndRecorder(t, http.MethodPost, "/", GenericBody{Value: "test"})
-		// err := handler(res, addId(req))
-		// testcommon.AssertNotError(t, err, "")
+		res, req := newRequestAndRecorder(t, http.MethodPost, "/", GenericBody{Value: "test"})
+		err := handler(res, addPathParam(addId(req), "id", "1"))
+		testcommon.AssertNotError(t, err, "")
 	})
 }
 
@@ -171,8 +184,8 @@ func TestCreateGenericDeleteHandler(t *testing.T) {
 	})
 
 	t.Run("test with id with path param", func(t *testing.T) {
-		// res, req := newRequestAndRecorder(t, http.MethodDelete, "/", nil)
-		// err := handler(res, addId(req))
-		// testcommon.AssertNotError(t, err, "")
+		res, req := newRequestAndRecorder(t, http.MethodDelete, "/", nil)
+		err := handler(res, addPathParam(addId(req), "id", "1"))
+		testcommon.AssertNotError(t, err, "")
 	})
 }
