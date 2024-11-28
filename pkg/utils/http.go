@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -69,9 +70,9 @@ func DecodeJsonBody[T any](r *http.Request) (T, error) {
 	var body T
 	err := decoder.Decode(&body)
 	if err != nil {
+		fmt.Println("error", err.Error())
 		return body, types.UnparsableJsonBody
 	}
-
 	return body, nil
 }
 

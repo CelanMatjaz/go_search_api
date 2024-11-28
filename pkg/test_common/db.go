@@ -89,7 +89,7 @@ func SeedAccount(t *testing.T, store *postgres.PostgresStore) (types.Account, st
 	password := "Password1!"
 	accountData, _ := types.CreateNewAccountData("Display name", "test@test.com", password)
 	account, err := store.CreateAccount(accountData)
-	AssertError(t, err, "could not create account for testing")
+	AssertNotError(t, err, "could not create account for testing")
 	return account, password
 }
 
@@ -130,7 +130,7 @@ func CreateOAuthClient(t *testing.T, store *postgres.PostgresStore) types.OAuthC
 
 	var client types.OAuthClient
 	err := row.Scan(postgres.GetScanFields(&client)...)
-	AssertError(t, err, "could not create oauth client for testing")
+	AssertNotError(t, err, "could not create oauth client for testing")
 
 	return client
 }

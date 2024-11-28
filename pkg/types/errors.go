@@ -4,13 +4,16 @@ import "errors"
 
 var (
 	AccountAlreadyExistsErr = errors.New("account already exists")
-	AccountDoesNotExistErr  = errors.New("account does not")
+	AccountDoesNotExistErr  = errors.New("account does not exist")
 	RecordDoesNotExistErr   = errors.New("record does not exist")
 	InvalidJsonBodyErr      = errors.New("invalid json body")
 	InvalidTokenErr         = errors.New("invalid token")
 	MissingCookieErr        = errors.New("missing cookie")
 	UnknownOAuthProviderErr = errors.New("unknown oauth provider")
 	OAuthProviderIssuesErr  = errors.New("authentication issues with oauth provider")
+	OAuthUnverifiedEmailErr = errors.New("unverified oauth email")
+	UnauthenticatedErr      = errors.New("unauthenticated")
+	InvalidPathParamErr      = errors.New("invalid path param")
 )
 
 var (
@@ -26,5 +29,5 @@ var (
 	OAuthProviderIssueErrors       = []string{"Issue with authenticating with OAuth provider"}
 	UnverifiedOAuthEmailErrors     = []string{"Email used to authenticate with OAuth is unverified"}
 	InvalidPathParamErrors         = []string{"Path param is not valid"}
-	PasswordsDoNotMathErrors       = []string{"Path param is not valid"}
+	PasswordsDoNotMathErrors       = []string{"Passwords do not match"}
 )

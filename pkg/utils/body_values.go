@@ -13,7 +13,7 @@ func GetValuesFromBody(body any, neededTagValue string, prepend []any) []any {
 		field := v.Field(i)
 		fieldType := v.Type().Field(i)
 
-        // TODO: create a more generic solution
+		// TODO: create a more generic solution
 		if fieldType.Tag.Get("db") == "account_id" {
 			continue
 		}
@@ -46,27 +46,11 @@ func getValues(val reflect.Value) []any {
 
 	kind := val.Kind()
 	switch kind {
-	case reflect.Int:
-		fallthrough
-	case reflect.Int8:
-		fallthrough
-	case reflect.Int16:
-		fallthrough
-	case reflect.Int32:
-		fallthrough
-	case reflect.Int64:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		values = append(values, val.Int())
 		break
 
-	case reflect.Uint:
-		fallthrough
-	case reflect.Uint8:
-		fallthrough
-	case reflect.Uint16:
-		fallthrough
-	case reflect.Uint32:
-		fallthrough
-	case reflect.Uint64:
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		values = append(values, val.Uint())
 		break
 

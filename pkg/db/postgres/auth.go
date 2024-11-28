@@ -143,10 +143,11 @@ func (s *PostgresStore) getAccount(whereClause string, value any) (types.Account
             accounts.id, 
             accounts.display_name,
             accounts.email,
-            ph.password_hash,
             accounts.refresh_token_version,
+            accounts.is_oauth,
             accounts.created_at,
-            accounts.updated_at
+            accounts.updated_at,
+            ph.password_hash
         FROM accounts
         LEFT JOIN password_hashes ph ON accounts.id = ph.account_id `+whereClause, value)
 	if err != nil {

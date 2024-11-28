@@ -86,7 +86,7 @@ func validateMax(validate string, val reflect.Value, field string) string {
 func validateLen(validate string, val reflect.Value, field string) string {
 	length, _ := strconv.Atoi(strings.TrimPrefix(validate, "len:"))
 	if len(val.String()) != length {
-		return fmt.Sprintf("Field '%s' must be exactly %d characters long", field, length)
+		return fmt.Sprintf("Field '%s' must be at most %d characters long", field, length)
 	}
 	return ""
 }

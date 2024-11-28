@@ -13,10 +13,10 @@ func TestCreateAccount(t *testing.T) {
 	store := postgres.CreatePostgresStore(conn.Db)
 
 	account, err := types.CreateNewAccountData("Display name", "test@test.com", "password")
-	testcommon.AssertError(t, err, "could not create new account data")
+	testcommon.AssertNotError(t, err, "could not create new account data")
 
 	_, err = store.CreateAccount(account)
-	testcommon.AssertError(t, err, "could not create new account")
+	testcommon.AssertNotError(t, err, "could not create new account")
 }
 
 func TestCreateAccountWithOAuth(t *testing.T) {
@@ -25,7 +25,7 @@ func TestCreateAccountWithOAuth(t *testing.T) {
 	oauthClient := testcommon.CreateOAuthClient(t, store)
 
 	account, err := types.CreateNewAccountData("Display name", "test@test.com", "password")
-	testcommon.AssertError(t, err, "could not create new account data")
+	testcommon.AssertNotError(t, err, "could not create new account data")
 
 	_, err = store.CreateAccountWithOAuth(account, types.TokenResponse{
 		AccessToken:  "",
@@ -33,7 +33,7 @@ func TestCreateAccountWithOAuth(t *testing.T) {
 		RefreshToken: "",
 		Scope:        "",
 	}, oauthClient.Id)
-	testcommon.AssertError(t, err, "could not create new oauth account")
+	testcommon.AssertNotError(t, err, "could not create new oauth account")
 }
 
 func TestUpdateAccountToOAuth(t *testing.T) {
@@ -48,7 +48,7 @@ func TestUpdateAccountToOAuth(t *testing.T) {
 		RefreshToken: "",
 		Scope:        "",
 	}, oauthClient.Id)
-	testcommon.AssertError(t, err, "could not convert normal account to oauth account")
+	testcommon.AssertNotError(t, err, "could not convert normal account to oauth account")
 }
 
 func TestGetOAuthClientByName(t *testing.T) {
@@ -57,10 +57,10 @@ func TestGetOAuthClientByName(t *testing.T) {
 	oauthClient := testcommon.CreateOAuthClient(t, store)
 
 	_, exists, err := store.GetOAuthClientByName(oauthClient.Name)
-	testcommon.AssertError(t, err, "error getting oauth client by name")
+	testcommon.AssertNotError(t, err, "error getting oauth client by name")
 	testcommon.Assert(t, exists, "oauth client does not exist")
 
 	_, exists, err = store.GetOAuthClientByName("nonexisting name")
-	testcommon.AssertError(t, err, "error getting oauth client by name")
+	testcommon.AssertNotError(t, err, "error getting oauth client by name")
 	testcommon.Assert(t, !exists, "oauth client should not exist")
 }

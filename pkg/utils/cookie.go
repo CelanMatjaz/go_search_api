@@ -27,7 +27,9 @@ func CreateAndSetCookie(w http.ResponseWriter, name string, value string) {
 
 func InvalidateCookie(w http.ResponseWriter, name string) {
 	cookie := CreateCookie(name, "")
-	cookie.Expires = time.Now()
+	cookie.Expires = time.Time{}
+	cookie.MaxAge = -1
+    cookie.Secure = false
 	http.SetCookie(w, &cookie)
 }
 
