@@ -9,14 +9,28 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+func getAccountId(r *http.Request) (int, error) {
+	value := r.Context().Value(middleware.AccountIdKey)
+	if value == nil {
+		return 0, types.Unauthenticated
+	}
+
+	accountId := value.(int)
+	if (recover() != nil) || (accountId == 0) {
+		return 0, types.Unauthenticated
+	}
+
+	return accountId, nil
+}
+
 func CreateGenericGetManyHandler[T any](
 	get func(int) ([]T, error),
 	sendJson func(w http.ResponseWriter, data []T) error,
 ) HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		accountId := r.Context().Value(middleware.AccountIdKey).(int)
-		if accountId == 0 {
-			return types.Unauthenticated
+		accountId, err := getAccountId(r)
+		if err != nil {
+			return err
 		}
 
 		data, err := get(accountId)
@@ -33,9 +47,9 @@ func CreateGenericGetManyWithPaginationHandler[T any](
 	sendJson func(w http.ResponseWriter, data []T) error,
 ) HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		accountId := r.Context().Value(middleware.AccountIdKey).(int)
-		if accountId == 0 {
-			return types.Unauthenticated
+		accountId, err := getAccountId(r)
+		if err != nil {
+			return err
 		}
 
 		pagination := types.GetPaginationParams(r)
@@ -53,9 +67,9 @@ func CreateGenericGetSingleHandler[T any](
 	sendJson func(w http.ResponseWriter, data T) error,
 ) HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		accountId := r.Context().Value(middleware.AccountIdKey).(int)
-		if accountId == 0 {
-			return types.Unauthenticated
+		accountId, err := getAccountId(r)
+		if err != nil {
+			return err
 		}
 
 		recordIdParam := chi.URLParam(r, "id")
@@ -78,9 +92,9 @@ func CreateGenericPostHandler[T any](
 	sendJson func(w http.ResponseWriter, data T) error,
 ) HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		accountId := r.Context().Value(middleware.AccountIdKey).(int)
-		if accountId == 0 {
-			return types.Unauthenticated
+		accountId, err := getAccountId(r)
+		if err != nil {
+			return err
 		}
 
 		body, err := decodeAndValidateBody[T](r)
@@ -88,7 +102,7 @@ func CreateGenericPostHandler[T any](
 			return err
 		}
 
-		data, err := create(accountId,body)
+		data, err := create(accountId, body)
 		if err != nil {
 			return err
 		}
@@ -102,9 +116,9 @@ func CreateGenericPutHandler[T any](
 	sendJson func(w http.ResponseWriter, data T) error,
 ) HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		accountId := r.Context().Value(middleware.AccountIdKey).(int)
-		if accountId == 0 {
-			return types.Unauthenticated
+		accountId, err := getAccountId(r)
+		if err != nil {
+			return err
 		}
 
 		recordIdParam := chi.URLParam(r, "id")
@@ -131,9 +145,9 @@ func CreateGenericDeleteHandler(
 	delete func(int, int) error,
 ) HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		accountId := r.Context().Value(middleware.AccountIdKey).(int)
-		if accountId == 0 {
-			return types.Unauthenticated
+		accountId, err := getAccountId(r)
+		if err != nil {
+			return err
 		}
 
 		recordIdParam := chi.URLParam(r, "id")

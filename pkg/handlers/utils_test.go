@@ -50,16 +50,6 @@ func getBody[T any](t *testing.T, res *http.Response) T {
 	return body
 }
 
-// Since this is used for testing, no need to defer res.Body.Close()
-func assertResponseStatus(t *testing.T, req *http.Request, expectedStatus int) *http.Response {
-	res := getResponse(t, req)
-	testcommon.Assert(
-		t, res.StatusCode == expectedStatus,
-		"response status does not match expected status\nexpected: %d\nactual:   %d (%s)", expectedStatus, res.StatusCode, res.Status,
-	)
-	return res
-}
-
 func newRequestAndRecorder(t *testing.T, method string, path string, body any) (*httptest.ResponseRecorder, *http.Request) {
 	res := httptest.NewRecorder()
 
@@ -80,14 +70,11 @@ func newRequestWithContextValues(req *http.Request, key any, value any) *http.Re
 	return req.WithContext(ctx)
 }
 
-// func assertStatusWithActualHandler(t *testing.T, req *http.Request, expectedStatusCode int, handler handlers.HandlerFunc) {
-// 	res := httptest.NewRecorder()
-// 	handlers.CreateHandler(handler)(res, req)
-//
-// 	result := res.Result()
-// 	if result.StatusCode != expectedStatusCode {
-// 		body, _ := io.ReadAll(result.Body)
-// 		t.Log("response body:", string(body))
-// 		t.Fatalf("response status does not match expected status\nexpected: %d\nactual:   %d (%s)", expectedStatusCode, result.StatusCode, result.Status)
-// 	}
-// }
+func assertResponseStatus(t *testing.T, res *httptest.ResponseRecorder, statusCode int) {
+	result := res.Result()
+	testcommon.Assert(
+		t, result.StatusCode == statusCode,
+		"response status code does not equal expected status code\nexpected: %d\nactual:   %d",
+		statusCode,
+		result.StatusCode)
+}
