@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/db"
-	"github.com/CelanMatjaz/job_application_tracker_api/pkg/middleware"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/types"
 	"github.com/CelanMatjaz/job_application_tracker_api/pkg/utils"
 	"github.com/go-chi/chi/v5"
@@ -21,10 +20,10 @@ func NewTagHandler(store db.TagStore) *TagHandler {
 
 func (h *TagHandler) AddRoutes(r chi.Router) {
 	r.Route("/tags", func(r chi.Router) {
-		r.Get("/application-presets/{id}", CreateHandler(createGetManyTagsFromTableHandler(h.store.GetApplicationPresetTags)))
-		r.Get("/application-sections/{id}", CreateHandler(createGetManyTagsFromTableHandler(h.store.GetApplicationSectionTags)))
-		r.Get("/resume-presets/{id}", CreateHandler(createGetManyTagsFromTableHandler(h.store.GetResumePresetTags)))
-		r.Get("/resume-sections/{id}", CreateHandler(createGetManyTagsFromTableHandler(h.store.GetResumeSectionTags)))
+		r.Get("/application-presets/{id}", CreateHandler(CreateGetManyTagsFromTableHandler(h.store.GetApplicationPresetTags)))
+		r.Get("/application-sections/{id}", CreateHandler(CreateGetManyTagsFromTableHandler(h.store.GetApplicationSectionTags)))
+		r.Get("/resume-presets/{id}", CreateHandler(CreateGetManyTagsFromTableHandler(h.store.GetResumePresetTags)))
+		r.Get("/resume-sections/{id}", CreateHandler(CreateGetManyTagsFromTableHandler(h.store.GetResumeSectionTags)))
 
 		r.Get("/", CreateHandler(CreateGenericGetManyHandler(h.store.GetTags, sendTags)))
 		r.Get("/{id}", CreateHandler(CreateGenericGetSingleHandler(h.store.GetTag, sendTag)))
@@ -46,13 +45,13 @@ func sendTag(w http.ResponseWriter, data types.Tag) error {
 	}{Tag: data}, http.StatusOK)
 }
 
-func createGetManyTagsFromTableHandler(
+func CreateGetManyTagsFromTableHandler(
 	get func(int, int) ([]types.Tag, error),
 ) HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		accountId := r.Context().Value(middleware.AccountIdKey).(int)
-		if accountId == 0 {
-			return types.Unauthenticated
+		accountId, err := getAccountId(r)
+		if err != nil {
+			return err
 		}
 
 		recordIdParam := chi.URLParam(r, "id")
